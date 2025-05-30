@@ -1,0 +1,150 @@
+﻿@model FrontCafeteriaMVC.Models.HistorialCreditoFiltroViewModel
+
+@{
+    ViewData["Title"] = "Historial de Crédito";
+}
+
+<div class="container">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    <!-- Formulario de filtrado -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="HistorialCredito" class="mb-0">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="numeroControl" class="form-label">Filtrar por Número de Control</label>
+                        <input type="text" name="numeroControl" class="form-control" value="@Model.NumeroControl" placeholder="Ingrese número de control" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        @if (!string.IsNullOrWhiteSpace(Model.NumeroControl))
+                        {
+                            <a href="@Url.Action("HistorialCredito")" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times"></i> Limpiar
+                            </a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen de resultados -->
+    <div class="mb-3">
+        @if (!string.IsNullOrWhiteSpace(Model.NumeroControl))
+        {
+            <div class="alert alert-info">
+                Mostrando resultados filtrados para: <strong>@Model.NumeroControl</strong>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                Mostrando todo el historial de créditos
+            </div>
+        }
+    </div>
+
+    <!-- Tabla de resultados -->
+    @if (Model.Historial != null && Model.Historial.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Número Control</th>
+                        <th>Cantidad</th>
+                        <th>Fecha</th>
+                        <th>Autorizado Por</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Historial)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.NumeroControlAfectado</td>
+                            <td class="@(item.Cantidad < 0 ? "text-danger" : "text-success")">
+                                @item.Cantidad.ToString("C")
+                            </td>
+                            <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.AutCorreo</td>
+                            <td>
+                                <a href="@Url.Action("DetalleMovimiento", new { id = item.Id })" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Detalle
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación (opcional) -->
+        <div class="d-flex justify-content-between mt-3">
+            <div>
+                <span class="text-muted">Mostrando @Model.Historial.Count registros</span>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary" disabled>Anterior</button>
+                <button class="btn btn-outline-primary ms-2" disabled>Siguiente</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            @if (string.IsNullOrWhiteSpace(Model.NumeroControl))
+            {
+                <span><i class="fas fa-info-circle"></i> No hay registros en el historial de crédito.</span>
+            }
+            else
+            {
+                <span><i class="fas fa-exclamation-triangle"></i> No se encontraron resultados para el número de control: <strong>@Model.NumeroControl</strong></span>
+            }
+        </div>
+    }
+
+    <!-- Botones adicionales -->
+    <div class="mt-4">
+        <a href="@Url.Action("PagarLiquidacion", "Usuarios")" class="btn btn-warning">
+            <i class="fas fa-money-bill-wave"></i> Pagar Liquidación
+        </a>
+
+        <a href="@Url.Action("ExportarHistorial", new { numeroControl = Model.NumeroControl })" class="btn btn-success ms-2">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
+        </a>
+    </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+    .text-danger {
+        font-weight: bold;
+    }
+    .text-success {
+        font-weight: bold;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Puedes añadir funcionalidad JavaScript aquí si es necesario
+        $(document).ready(function() {
+            // Ejemplo: Confirmación para borrar
+            $('.btn-eliminar').click(function(e) {
+                if (!confirm('¿Está seguro de eliminar este registro?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,48 @@
+﻿@model FrontCafeteriaMVC.Models.UsuarioRegistroDTO
+
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
+
+<h2>Crear Usuario</h2>
+
+<form asp-action="Crear" method="post" novalidate>
+    <div class="form-group">
+        <label asp-for="Nombre" class="control-label"></label>
+        <input asp-for="Nombre" class="form-control" placeholder="Ej. Juan Pérez López" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Correo" class="control-label"></label>
+        <input asp-for="Correo" class="form-control" placeholder="correo@ejemplo.com" />
+        <span asp-validation-for="Correo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="NumeroControl" class="control-label"></label>
+        <input asp-for="NumeroControl" class="form-control" placeholder="8 dígitos" />
+        <span asp-validation-for="NumeroControl" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Credito" class="control-label"></label>
+        <input asp-for="Credito" class="form-control" type="number" step="0.01" min="50" placeholder="Mínimo 50" />
+        <span asp-validation-for="Credito" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Contrasena" class="control-label"></label>
+        <input asp-for="Contrasena" class="form-control" type="password" placeholder="Mínimo 6 caracteres" />
+        <span asp-validation-for="Contrasena" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancelar</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

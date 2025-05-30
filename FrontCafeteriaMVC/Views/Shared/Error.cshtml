@@ -1,0 +1,32 @@
+﻿@model ErrorViewModel
+@inject IWebHostEnvironment HostEnvironment
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">Error</h1>
+
+@if (Model?.Exception != null)
+{
+    <h2 class="text-danger">@Model.Exception.GetType().Name</h2>
+    <p>@Model.Exception.Message</p>
+
+    @if (HostEnvironment.IsDevelopment())
+    {
+        <div style="background: #f8f9fa; padding: 20px; margin-top: 20px;">
+            <h3>Stack Trace</h3>
+            <pre>@Model.Exception.StackTrace</pre>
+        </div>
+    }
+}
+else
+{
+    <h2 class="text-danger">Ocurrió un error al procesar tu solicitud</h2>
+}
+
+@if (Model?.ShowRequestId ?? false)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}

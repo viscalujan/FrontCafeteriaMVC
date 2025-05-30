@@ -1,0 +1,43 @@
+﻿@model List<FrontCafeteriaMVC.Models.UsuarioDTO>
+
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<h1>Usuarios Registrados</h1>
+
+<a class="btn btn-primary mb-3" href="@Url.Action("Crear", "Usuarios")">Registrar Nuevo Usuario</a>
+
+<div class="mb-3">
+    <a class="btn btn-info" asp-action="HistorialCredito">Ver Historial de Crédito</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Número de Control</th>
+            <th>Crédito</th>
+        </tr>
+    </thead>
+    <tbody>
+       
+        <a asp-controller="Usuarios" asp-action="AumentarCredito" class="btn btn-warning">
+            Aumentar Crédito
+        </a>
+      
+
+
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Correo</td>
+                <td>@item.NumeroControl</td>
+                <td>@item.Credito.ToString("C")</td> 
+            </tr>
+        }
+    </tbody>
+</table>

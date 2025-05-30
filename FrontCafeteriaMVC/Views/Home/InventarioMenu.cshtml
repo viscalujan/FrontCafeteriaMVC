@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Menú Inventario";
+}
+
+<h1>Bienvenido al Panel de Inventario</h1>
+
+<div class="mt-4">
+    <a class="btn btn-primary" href="@Url.Action("Index", "Productos")">Administrar Productos</a>
+    <a class="btn btn-secondary" href="@Url.Action("Index", "Usuarios")">Administrar Usuarios</a>
+</div>
+
+<div class="mt-3">
+    <form method="post" asp-action="Logout" asp-controller="Auth">
+        <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+    </form>
+</div>

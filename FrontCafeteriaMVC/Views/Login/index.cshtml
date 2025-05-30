@@ -1,0 +1,44 @@
+﻿@model FrontCafeteriaMVC.Models.LoginRequest
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
+
+@{
+    ViewData["Title"] = "Inicio de Sesión";
+}
+
+@if (env.IsDevelopment())
+{
+    <p class="text-muted text-center">Entorno actual: @env.EnvironmentName</p>
+}
+
+<div class="card w-50 mx-auto mt-5 shadow">
+    <div class="card-body">
+        <h2 class="card-title text-center mb-4">Inicio de Sesión</h2>
+
+        <form asp-action="Index" method="post" novalidate>
+            <div class="mb-3">
+                <label asp-for="Correo" class="form-label">Correo</label>
+                <input asp-for="Correo" class="form-control" />
+                <span asp-validation-for="Correo" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Contra" class="form-label">Contraseña</label>
+                <input asp-for="Contra" type="password" class="form-control" />
+                <span asp-validation-for="Contra" class="text-danger"></span>
+            </div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">@ViewBag.Error</div>
+            }
+
+            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

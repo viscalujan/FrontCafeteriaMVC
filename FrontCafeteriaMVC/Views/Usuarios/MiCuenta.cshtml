@@ -1,0 +1,56 @@
+﻿@model FrontCafeteriaMVC.Models.MiCuentaVM
+@{
+    ViewData["Title"] = "Mi Cuenta";
+}
+
+<h2 class="text-center mb-4">Mi Cuenta</h2>
+
+<div class="card shadow-sm p-4 mb-4">
+    <h4>Bienvenido, @Model.Nombre (@Model.NumeroControl)</h4>
+    <h5>Crédito Disponible:</h5>
+    <p class="fs-5 fw-bold text-success">@Model.Credito.ToString("C")</p>
+</div>
+
+<div class="card shadow-sm p-4 mb-4">
+    <h4>Mi Código QR</h4>
+    @if (!string.IsNullOrEmpty(Model.QrBase64))
+    {
+        <img src="data:image/png;base64,@Model.QrBase64" class="img-thumbnail" style="max-width: 200px;" />
+        <br />
+        <a class="btn btn-primary mt-2" href="@Model.QrDownloadUrl" download="codigo_qr.png">Descargar QR</a>
+    }
+    else
+    {
+        <p>No hay código QR disponible.</p>
+    }
+</div>
+
+<div class="card shadow-sm p-4">
+    <h4>Historial de Crédito</h4>
+    @if (Model.Historial != null && Model.Historial.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cantidad</th>
+                    <th>Autorizado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Historial)
+                {
+                    <tr>
+                        <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@item.Cantidad.ToString("C")</td>
+                        <td>@item.AutCorreo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No hay registros de crédito.</p>
+    }
+</div>

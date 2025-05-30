@@ -1,0 +1,30 @@
+﻿@model FrontCafeteriaMVC.Models.AumentoCreditoDTO
+
+@{
+    ViewData["Title"] = "Aumentar Crédito";
+}
+
+<h2>Aumentar Crédito</h2>
+
+@if (TempData["Exito"] != null)
+{
+    <div class="alert alert-success">@TempData["Exito"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form asp-action="AumentarCredito" method="post">
+    <div class="form-group">
+        <label for="NumeroControl">Número de Control</label>
+        <input asp-for="NumeroControl" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label for="Cantidad">Cantidad a Aumentar</label>
+        <input asp-for="Cantidad" class="form-control" type="number" step="0.01" min="0" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Aumentar</button>
+</form>

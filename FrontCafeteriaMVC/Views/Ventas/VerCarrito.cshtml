@@ -1,0 +1,33 @@
+﻿@model List<Producto>
+@{
+    ViewBag.Title = "Carrito de Compras";
+    var total = ViewBag.Total;
+}
+
+<h2>Carrito de Compras</h2>
+
+@if (!Model.Any())
+{
+    <p>No hay productos en el carrito.</p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>Producto</th><th>Precio</th></tr></thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Nombre</td>
+                    <td>@p.Precio.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Total: @total.ToString("C")</h4>
+
+    <form method="post" asp-action="FinalizarVenta">
+        <button type="submit" class="btn btn-success">Finalizar Venta</button>
+    </form>
+}

@@ -1,0 +1,20 @@
+﻿@model VentaCreate
+
+<h2>Ticket de Venta</h2>
+
+<p>Venta registrada correctamente.</p>
+
+<table class="table">
+    <thead><tr><th>Producto</th><th>Cantidad</th></tr></thead>
+    <tbody>
+        @foreach (var item in Model.Detalles)
+        {
+            <tr>
+                <td>@item.ProductoId</td>
+                <td>@item.Cantidad</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Index", "Ventas")" class="btn btn-primary">Volver</a>

@@ -1,0 +1,299 @@
+﻿@model FrontCafeteriaMVC.Models.VentasViewModel
+@{
+    ViewData["Title"] = "Ventas";
+}
+
+<div class="container-fluid">
+    <!-- Mensajes de estado -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Ventas</h1>
+            <a asp-action="Reporte" class="btn btn-info">Ver Reporte</a>
+        </div>
+    </div>
+
+    <!-- Buscador -->
+    <form method="get" class="form-inline mb-4">
+        <input type="text" name="buscar" value="@Model.Buscar" placeholder="Buscar producto"
+               class="form-control mr-2" />
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </form>
+
+    <div class="row">
+        <!-- Productos -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Productos Disponibles</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in Model.Productos ?? new List<Producto>())
+                            {
+                                <tr>
+                                    <td>@producto.Nombre</td>
+                                    <td>@producto.Precio.ToString("C")</td>
+                                    <td>@producto.Cantidad</td>
+                                    <td>
+                                        <form asp-action="AgregarAlCarrito" method="post" class="form-inline">
+                                            <input type="hidden" name="ProductoId" value="@producto.Id" />
+                                            <div class="input-group">
+                                                <input type="number" name="Cantidad" value="1" min="1"
+                                                       max="@producto.Cantidad" class="form-control" style="width: 80px;" />
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="fas fa-cart-plus"></i> Agregar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carrito -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-shopping-cart"></i> Carrito</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Carrito != null && Model.Carrito.Any())
+                    {
+                        <ul class="list-group mb-3">
+                            @foreach (var item in Model.Carrito)
+                            {
+                                var producto = Model.ProductosDic?.GetValueOrDefault(item.ProductoId);
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@(producto?.Nombre ?? $"Producto #{item.ProductoId}")</strong>
+                                            <div class="text-muted">
+                                                @item.Cantidad x @(producto?.Precio.ToString("C") ?? "N/A")
+                                                <span class="float-right">
+                                                    @((item.Cantidad * (producto?.Precio ?? 0)).ToString("C"))
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <form asp-action="QuitarDelCarrito" method="post">
+                                            <input type="hidden" name="ProductoId" value="@item.ProductoId" />
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="alert alert-info">
+                            <h5 class="mb-0">Total: <strong>@Model.Total.ToString("C")</strong></h5>
+                        </div>
+
+                        <!-- Formulario de venta -->
+                        <form asp-action="FinalizarVenta" method="post" id="ventaForm">
+                            <div class="form-group">
+                                <label for="metodoPago"><i class="fas fa-money-bill-wave"></i> Método de pago:</label>
+                                <select id="metodoPago" name="metodoPago" class="form-control" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="credito">Crédito</option>
+                                </select>
+                            </div>
+
+                            <div id="creditoFields" style="display: none;">
+                                <div class="form-group">
+                                    <label><i class="fas fa-qrcode"></i> Escanear QR:</label>
+                                    <div class="text-center">
+                                        <button type="button" id="btnEscanearQR" class="btn btn-outline-primary btn-block">
+                                            <i class="fas fa-camera"></i> Activar Escáner QR
+                                        </button>
+                                        <div id="qrStatus" class="mt-2 text-success font-weight-bold" style="display: none;">
+                                            <i class="fas fa-check-circle"></i> QR válido detectado
+                                        </div>
+                                        <input type="hidden" name="hashQR" id="hashQR" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block mt-3" id="btnFinalizar">
+                                <i class="fas fa-cash-register"></i> Finalizar Venta
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                            <p class="mb-0">El carrito está vacío</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal QR Scanner -->
+<div class="modal fade" id="qrScannerModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-qrcode"></i> Escáner QR</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="scannerContainer" style="width: 100%; height: 300px; overflow: hidden; position: relative;">
+                    <video id="qrVideo" width="100%" height="100%" style="object-fit: cover;"></video>
+                    <div id="qrScannerOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 2px solid rgba(0, 255, 0, 0.5);"></div>
+                </div>
+                <div id="qrResult" class="mt-3 font-weight-bold text-success"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Mostrar/ocultar campos de crédito
+            $('#metodoPago').change(function() {
+                const showCreditFields = $(this).val() === 'credito';
+                $('#creditoFields').toggle(showCreditFields);
+                if (!showCreditFields) {
+                    $('#qrStatus').hide();
+                }
+            });
+
+            // Escaner QR
+            $('#btnEscanearQR').click(showQRScanner);
+
+            // Auto-ocultar mensajes después de 5 segundos
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+
+        function showQRScanner() {
+            const modal = $('#qrScannerModal');
+            const video = document.getElementById('qrVideo');
+            const result = $('#qrResult');
+            const qrStatus = $('#qrStatus');
+
+            let scannerActive = true;
+            let qrCode = null;
+
+            modal.modal('show');
+            result.text("Buscando código QR...").css('color', 'black');
+
+            // Configurar cámara
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            }).then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+                scanQR();
+            }).catch(function(err) {
+                result.text("Error al acceder a la cámara: " + err.message).css('color', 'red');
+            });
+
+            function scanQR() {
+                if (!scannerActive) return;
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert",
+                    });
+
+                    if (code) {
+                        qrCode = code.data;
+                        result.text("✓ QR válido detectado").css('color', 'green');
+                        $('#hashQR').val(qrCode);
+                        qrStatus.show();
+                        scannerActive = false;
+                        modal.modal('hide');
+                    }
+                }
+
+                requestAnimationFrame(scanQR);
+            }
+
+            modal.on('hidden.bs.modal', function() {
+                scannerActive = false;
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+            });
+        }
+
+        // Validación del formulario
+        $('#ventaForm').submit(function(e) {
+            const metodoPago = $('#metodoPago').val();
+            const btnFinalizar = $('#btnFinalizar');
+
+            if (metodoPago === 'credito' && !$('#hashQR').val()) {
+                e.preventDefault();
+                alert('Por favor escanee el código QR del cliente');
+                return;
+            }
+
+            // Deshabilitar botón para evitar doble clic
+            btnFinalizar.prop('disabled', true);
+            btnFinalizar.html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+        });
+    </script>
+}

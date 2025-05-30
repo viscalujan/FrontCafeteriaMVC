@@ -1,0 +1,33 @@
+﻿@model List<FrontCafeteriaMVC.Models.Producto>
+
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<h1>Productos en Inventario</h1>
+
+<a class="btn btn-primary mb-3" href="@Url.Action("Crear", "Productos")">Agregar Producto Nuevo</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Cantidad</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Precio.ToString("C")</td>
+                <td>@item.Cantidad</td>
+                <td>
+                    <a class="btn btn-warning btn-sm" href="@Url.Action("Editar", "Productos", new { id = item.Id })">Editar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,95 @@
+﻿@model FrontCafeteriaMVC.Models.ReporteVentasViewModel
+
+@{
+    ViewData["Title"] = "Reporte de Ventas Agrupadas";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    <!-- Filtros -->
+    <form asp-action="Reporte" method="get" class="mb-4 card card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Fecha inicio:</label>
+                <input type="date" name="desde" class="form-control"
+                       value="@Model.Desde?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha fin:</label>
+                <input type="date" name="hasta" class="form-control"
+                       value="@Model.Hasta?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+            </div>
+        </div>
+
+        <a asp-action="GenerarExcel"
+           asp-route-desde="@Model.Desde?.ToString("yyyy-MM-dd")"
+           asp-route-hasta="@Model.Hasta?.ToString("yyyy-MM-dd")"
+           class="btn btn-success">
+            <i class="bi bi-file-excel"></i> Exportar a Excel
+        </a>
+
+    </form>
+
+
+
+    <!-- Resumen -->
+    <div class="alert alert-info mb-4">
+        <strong>Periodo:</strong> @Model.Desde?.ToString("d") al @Model.Hasta?.ToString("d") |
+        <strong>Total General:</strong> @Model.TotalGeneral.ToString("C")
+    </div>
+
+    <!-- Listado de ventas -->
+    @if (Model.VentasAgrupadas.Any())
+    {
+        @foreach (var venta in Model.VentasAgrupadas)
+        {
+            <div class="card mb-3">
+                <div class="card-header bg-light d-flex justify-content-between">
+                    <div>
+                        <strong>Ticket #@venta.VentaId</strong> -
+                        @venta.Fecha.ToString("g") -
+                        <span class="badge @(venta.MetodoPago == "efectivo" ? "bg-success" : "bg-info")">
+                            @venta.MetodoPago
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Total: </strong>@venta.TotalVenta.ToString("C")
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>P. Unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detalle in venta.Detalles)
+                            {
+                                <tr>
+                                    <td>@detalle.ProductoNombre</td>
+                                    <td>@detalle.Cantidad</td>
+                                    <td>@detalle.PrecioUnitario.ToString("C")</td>
+                                    <td>@detalle.Total.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning">No se encontraron ventas en el periodo seleccionado</div>
+    }
+</div>
