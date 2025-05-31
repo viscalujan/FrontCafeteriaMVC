@@ -3,54 +3,119 @@
     ViewData["Title"] = "Mi Cuenta";
 }
 
-<h2 class="text-center mb-4">Mi Cuenta</h2>
-
-<div class="card shadow-sm p-4 mb-4">
-    <h4>Bienvenido, @Model.Nombre (@Model.NumeroControl)</h4>
-    <h5>Crédito Disponible:</h5>
-    <p class="fs-5 fw-bold text-success">@Model.Credito.ToString("C")</p>
-</div>
-
-<div class="card shadow-sm p-4 mb-4">
-    <h4>Mi Código QR</h4>
-    @if (!string.IsNullOrEmpty(Model.QrBase64))
+<div class="container mt-4">
+    <!-- Mostrar mensajes de error -->
+    @if (TempData["ErrorMessage"] != null)
     {
-        <img src="data:image/png;base64,@Model.QrBase64" class="img-thumbnail" style="max-width: 200px;" />
-        <br />
-        <a class="btn btn-primary mt-2" href="@Model.QrDownloadUrl" download="codigo_qr.png">Descargar QR</a>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     }
-    else
-    {
-        <p>No hay código QR disponible.</p>
-    }
-</div>
 
-<div class="card shadow-sm p-4">
-    <h4>Historial de Crédito</h4>
-    @if (Model.Historial != null && Model.Historial.Any())
-    {
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Cantidad</th>
-                    <th>Autorizado por</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Historial)
+    <h2 class="text-center mb-4">Mi Cuenta</h2>
+
+    <!-- Tarjeta de información básica -->
+    <div class="card shadow-sm p-4 mb-4">
+        <h4>Bienvenido, @Model.Nombre (@Model.NumeroControl)</h4>
+        <h5>Crédito Disponible:</h5>
+        <p class="fs-5 fw-bold text-success">@Model.Credito.ToString("C")</p>
+
+        @if (ViewBag.CreditError != null)
+        {
+            <p class="text-danger">@ViewBag.CreditError</p>
+        }
+    </div>
+
+    <!-- Tarjeta del Código QR -->
+    <div class="card shadow-sm p-4 mb-4">
+        <h4>Mi Código QR</h4>
+
+        @if (!string.IsNullOrEmpty(Model.QrBase64))
+        {
+            <div class="text-center">
+                <img src="data:image/png;base64,@Model.QrBase64"
+                     class="img-thumbnail"
+                     style="max-width: 200px;"
+                     alt="Código QR de acceso" />
+                <br />
+                <button class="btn btn-primary mt-3" onclick="downloadQR()">
+                    <i class="fas fa-download"></i> Descargar QR
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <p>No hay código QR disponible.</p>
+                @if (ViewBag.QrError != null)
                 {
-                    <tr>
-                        <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@item.Cantidad.ToString("C")</td>
-                        <td>@item.AutCorreo</td>
-                    </tr>
+                    <p class="text-danger small">@ViewBag.QrError</p>
                 }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>No hay registros de crédito.</p>
-    }
+            </div>
+        }
+    </div>
+
+    <!-- Tarjeta del Historial de Crédito -->
+    <div class="card shadow-sm p-4">
+        <h4>Historial de Crédito</h4>
+
+        @if (Model.Historial != null && Model.Historial.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cantidad</th>
+                            <th>Autorizado por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Historial)
+                        {
+                            <tr>
+                                <td>@item.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="@(item.Cantidad >= 0 ? "text-success" : "text-danger")">
+                                    @item.Cantidad.ToString("C")
+                                </td>
+                                <td>@item.AutCorreo</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <p>No hay registros de crédito.</p>
+                @if (ViewBag.HistorialError != null)
+                {
+                    <p class="text-danger small">@ViewBag.HistorialError</p>
+                }
+            </div>
+        }
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Función para descargar el QR
+        function downloadQR() {
+            const link = document.createElement('a');
+            link.href = 'data:image/png;base64,@Model.QrBase64';
+            link.download = 'codigo_qr_@(Model.NumeroControl).png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Auto-cerrar mensajes de alerta después de 5 segundos
+        window.setTimeout(function() {
+            $(".alert").fadeTo(500, 0).slideUp(500, function(){
+                $(this).remove();
+            });
+        }, 5000);
+    </script>
+}

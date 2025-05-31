@@ -17,8 +17,13 @@ namespace FrontCafeteriaMVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var usuariosDTO = await _servicesApi.GetUsuariosAsync();
-            return View(usuariosDTO);
+            var usuarios = await _servicesApi.GetUsuariosAsync();
+            var viewModel = new UsuarioIndexViewModel
+            {
+                Usuarios = usuarios,
+                UsuarioRegistro = new UsuarioRegistroDTO()
+            };
+            return View(viewModel);
         }
 
         public IActionResult Crear()
@@ -27,18 +32,37 @@ namespace FrontCafeteriaMVC.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Crear(UsuarioRegistroDTO usuarioRegistroDTO)
-        {
-            if (!ModelState.IsValid)
-                return View(usuarioRegistroDTO);
 
-            var resultado = await _servicesApi.RegistrarUsuarioAsync(usuarioRegistroDTO);
+        public async Task<IActionResult> Crear([FromForm] UsuarioRegistroDTO usuarioRegistro)
+        {
+            var model = new UsuarioIndexViewModel
+            {
+                UsuarioRegistro = usuarioRegistro,
+                Usuarios = await _servicesApi.GetUsuariosAsync()
+            };
+
+            if (!ModelState.IsValid)
+            {
+                return View("Index", model);
+            }
+
+            // Validación adicional para el crédito mínimo
+            if (usuarioRegistro.Credito < 50)
+            {
+                ModelState.AddModelError("UsuarioRegistro.Credito", "El crédito inicial debe ser al menos $50");
+                return View("Index", model);
+            }
+
+            var resultado = await _servicesApi.RegistrarUsuarioAsync(usuarioRegistro);
 
             if (resultado)
+            {
+                TempData["Exito"] = "Usuario registrado correctamente";
                 return RedirectToAction(nameof(Index));
+            }
 
-            ModelState.AddModelError(string.Empty, "No se pudo registrar el usuario.");
-            return View(usuarioRegistroDTO);
+            ModelState.AddModelError(string.Empty, "No se pudo registrar el usuario. Puede que el correo ya esté en uso.");
+            return View("Index", model);
         }
 
         [HttpGet]
@@ -47,21 +71,26 @@ namespace FrontCafeteriaMVC.Controllers
             return View(new AumentoCreditoDTO());
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> AumentarCredito(AumentoCreditoDTO dto)
+        public async Task<IActionResult> AumentarCredito(UsuarioIndexViewModel model)
         {
+            var dto = model.AumentoCredito;
+
             if (dto.Cantidad < 50)
             {
                 ModelState.AddModelError(string.Empty, "La cantidad debe ser al menos 50.");
-                return View(dto);
+                model.Usuarios = await _servicesApi.GetUsuariosAsync();
+                return View("Index", model);
             }
 
             var usuario = await _servicesApi.GetUsuarioPorNumeroControlAsync(dto.NumeroControl);
 
             if (usuario == null)
             {
-                TempData["Error"] = "Usuario no encontrado.";
-                return View(dto);
+                ModelState.AddModelError(string.Empty, "Usuario no encontrado.");
+                model.Usuarios = await _servicesApi.GetUsuariosAsync();
+                return View("Index", model);
             }
 
             var creditoAntes = usuario.Credito;
@@ -70,18 +99,16 @@ namespace FrontCafeteriaMVC.Controllers
 
             if (!exito)
             {
-                TempData["Error"] = "No se pudo aumentar el crédito.";
-                return View(dto);
+                ModelState.AddModelError(string.Empty, "No se pudo aumentar el crédito.");
+                model.Usuarios = await _servicesApi.GetUsuariosAsync();
+                return View("Index", model);
             }
 
-            // Consultamos de nuevo para obtener el nuevo crédito
             var usuarioActualizado = await _servicesApi.GetUsuarioPorNumeroControlAsync(dto.NumeroControl);
 
-            ViewBag.CreditoAntes = creditoAntes;
-            ViewBag.CreditoDespues = usuarioActualizado?.Credito ?? creditoAntes;
+            TempData["Exito"] = $"Crédito aumentado correctamente. Antes: {creditoAntes:C}, Ahora: {usuarioActualizado.Credito:C}";
 
-            TempData["Exito"] = "Crédito aumentado correctamente.";
-            return View(dto);
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -123,16 +150,24 @@ namespace FrontCafeteriaMVC.Controllers
 
 
         [HttpGet]
-        public IActionResult PagarLiquidacion()
+        public async Task<IActionResult> PagarLiquidacionAsync()
         {
+            var credito = await _servicesApi.ObtenerCreditoLiquidacionAsync();
+            ViewBag.CreditoLiquidacion = credito;
             return View();
+
         }
 
         [HttpPost]
         public async Task<IActionResult> PagarLiquidacion(PagoLiquidacionDTO dto)
         {
+
             var resultado = await _servicesApi.PagarLiquidacionAsync(dto);
+            var credito = await _servicesApi.ObtenerCreditoLiquidacionAsync();
+
             ViewBag.Mensaje = resultado;
+            ViewBag.CreditoLiquidacion = credito;
+
             return View();
         }
 
@@ -165,6 +200,26 @@ namespace FrontCafeteriaMVC.Controllers
             };
 
             return View(vm);
+        }
+
+        // Agrega estos métodos a tu UsuariosController
+        [HttpGet]
+        public async Task<IActionResult> VerificarDatos(string numeroControl, string correo)
+        {
+            var response = new
+            {
+                numeroControlExiste = !string.IsNullOrEmpty(numeroControl)
+                    ? await _servicesApi.VerificarNumeroControlExistenteAsync(numeroControl)
+                    : false,
+                correoExiste = !string.IsNullOrEmpty(correo)
+                    ? await _servicesApi.VerificarCorreoExistenteAsync(correo)
+                    : false,
+                // Obtener datos locales de la tabla (cache)
+                numerosControlTabla = (await _servicesApi.GetUsuariosAsync()).Select(u => u.NumeroControl).ToList(),
+                correosTabla = (await _servicesApi.GetUsuariosAsync()).Select(u => u.Correo).ToList()
+            };
+
+            return Json(response);
         }
 
 

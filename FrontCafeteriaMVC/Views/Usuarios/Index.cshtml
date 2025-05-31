@@ -1,18 +1,101 @@
-﻿@model List<FrontCafeteriaMVC.Models.UsuarioDTO>
-
+﻿@model FrontCafeteriaMVC.Models.UsuarioIndexViewModel
 @{
     ViewData["Title"] = "Usuarios";
 }
+<!-- Mensajes de éxito/error -->
+@if (TempData["Exito"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Exito"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-<h1>Usuarios Registrados</h1>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @Html.ValidationSummary()
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<h2>Usuarios</h2>
 
-<a class="btn btn-primary mb-3" href="@Url.Action("Crear", "Usuarios")">Registrar Nuevo Usuario</a>
-
+<!-- Botones de acción -->
 <div class="mb-3">
-    <a class="btn btn-info" asp-action="HistorialCredito">Ver Historial de Crédito</a>
+    <button class="btn btn-success me-2" onclick="toggleFormulario('formNuevoUsuario')">+ Nuevo Usuario</button>
+    <button class="btn btn-primary me-2" onclick="toggleFormulario('formAumentoCredito')">↑ Aumentar Crédito</button>
+    <a class="btn btn-info" href="@Url.Action("HistorialCredito", "Usuarios")">📄 Ver Historial de Crédito</a>
 </div>
 
-<table class="table table-striped">
+<!-- Buscador -->
+<div class="mb-3">
+    <input type="text" id="buscador" class="form-control" placeholder="Buscar por nombre o número de control..." onkeyup="filtrarTabla()" />
+</div>
+
+<!-- Formulario: Nuevo Usuario -->
+<div id="formNuevoUsuario" style="display:none;" class="border p-3 rounded mb-4">
+    <div class="d-flex justify-content-between">
+        <h4>Registrar Nuevo Usuario</h4>
+        <button class="btn-close" type="button" onclick="cerrarFormulario('formNuevoUsuario')"></button>
+    </div>
+    <form id="formCrearUsuario" asp-action="Crear" method="post">
+        <div class="form-group mb-2">
+            <label asp-for="UsuarioRegistro.Nombre"></label>
+            <input asp-for="UsuarioRegistro.Nombre" class="form-control" required />
+            <span asp-validation-for="UsuarioRegistro.Nombre" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-2">
+            <label asp-for="UsuarioRegistro.Correo"></label>
+            <input asp-for="UsuarioRegistro.Correo" class="form-control" type="email" required />
+            <span asp-validation-for="UsuarioRegistro.Correo" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-2">
+            <label asp-for="UsuarioRegistro.NumeroControl"></label>
+            <input asp-for="UsuarioRegistro.NumeroControl" class="form-control" maxlength="8" required pattern="\d{8}" />
+            <span asp-validation-for="UsuarioRegistro.NumeroControl" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-2">
+            <label asp-for="UsuarioRegistro.Credito"></label>
+            <input asp-for="UsuarioRegistro.Credito" class="form-control" type="number" min="50" step="0.01" required />
+            <span asp-validation-for="UsuarioRegistro.Credito" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-2">
+            <label asp-for="UsuarioRegistro.Contrasena"></label>
+            <input asp-for="UsuarioRegistro.Contrasena" class="form-control" type="password" minlength="8" required />
+            <span asp-validation-for="UsuarioRegistro.Contrasena" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar</button>
+    </form>
+</div>
+
+<!-- Formulario: Aumentar Crédito -->
+<div id="formAumentoCredito" style="display:none;" class="border p-3 rounded mb-4">
+    <div class="d-flex justify-content-between">
+        <h4>Aumentar Crédito</h4>
+        <button class="btn-close" type="button" onclick="cerrarFormulario('formAumentoCredito')"></button>
+    </div>
+    <form id="formCredito" asp-action="AumentarCredito" method="post">
+        <div class="form-group mb-2">
+            <label asp-for="AumentoCredito.NumeroControl"></label>
+            <input asp-for="AumentoCredito.NumeroControl" class="form-control" id="numeroControlCredito" maxlength="8" required />
+            <span asp-validation-for="AumentoCredito.NumeroControl" class="text-danger"></span>
+        </div>
+        <div class="form-group mb-2">
+            <label asp-for="AumentoCredito.Cantidad"></label>
+            <input asp-for="AumentoCredito.Cantidad" class="form-control" type="number" step="0.01" min="0" required />
+            <span asp-validation-for="AumentoCredito.Cantidad" class="text-danger"></span>
+        </div>
+        <div id="creditoActual" class="mb-2 text-info"></div>
+        <button type="submit" class="btn btn-primary">Aumentar</button>
+    </form>
+</div>
+
+<!-- Tabla de usuarios -->
+<table class="table table-bordered table-striped" id="tablaUsuarios">
     <thead>
         <tr>
             <th>Nombre</th>
@@ -22,22 +105,214 @@
         </tr>
     </thead>
     <tbody>
-       
-        <a asp-controller="Usuarios" asp-action="AumentarCredito" class="btn btn-warning">
-            Aumentar Crédito
-        </a>
-      
-
-
-
-        @foreach (var item in Model)
+        @foreach (var usuario in Model.Usuarios)
         {
             <tr>
-                <td>@item.Nombre</td>
-                <td>@item.Correo</td>
-                <td>@item.NumeroControl</td>
-                <td>@item.Credito.ToString("C")</td> 
+                <td>@usuario.Nombre</td>
+                <td>@usuario.Correo</td>
+                <td>@usuario.NumeroControl</td>
+                <td>@usuario.Credito.ToString("C")</td>
             </tr>
         }
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        // Datos de la tabla en memoria
+        let usuariosTabla = {
+            numerosControl: [],
+            correos: []
+        };
+
+        // Cargar datos de la tabla al iniciar
+        function cargarDatosTabla() {
+            document.querySelectorAll("#tablaUsuarios tbody tr").forEach(row => {
+                usuariosTabla.numerosControl.push(row.cells[2].textContent.trim());
+                usuariosTabla.correos.push(row.cells[1].textContent.trim().toLowerCase());
+            });
+        }
+
+        // Función para mostrar/ocultar formularios
+        function toggleFormulario(id) {
+            const form = document.getElementById(id);
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+
+        // Función para cerrar formularios
+        function cerrarFormulario(id) {
+            const form = document.getElementById(id);
+            form.style.display = "none";
+            form.querySelector("form").reset();
+            const spans = form.querySelectorAll(".text-danger");
+            spans.forEach(s => s.textContent = "");
+            if (id === "formAumentoCredito") document.getElementById("creditoActual").textContent = "";
+        }
+
+        // Validación combinada de datos únicos
+        async function validarDatosUnicos() {
+            const numeroControl = document.getElementById("UsuarioRegistro_NumeroControl").value;
+            const correo = document.getElementById("UsuarioRegistro_Correo").value;
+
+            // Resetear validaciones previas
+            resetearValidaciones();
+
+            // Validación local contra la tabla
+            const numeroControlExisteLocal = usuariosTabla.numerosControl.includes(numeroControl);
+            const correoExisteLocal = usuariosTabla.correos.includes(correo.toLowerCase());
+
+            if (numeroControlExisteLocal || correoExisteLocal) {
+                mostrarErroresLocales(numeroControlExisteLocal, correoExisteLocal);
+                return false;
+            }
+
+            // Validación remota contra la base de datos completa
+            try {
+                const response = await fetch(`/Usuarios/VerificarDatos?numeroControl=${numeroControl}&correo=${encodeURIComponent(correo)}`);
+                const data = await response.json();
+
+                mostrarErroresRemotos(data.numeroControlExiste, data.correoExiste);
+
+                // Actualizar datos de la tabla si hay discrepancias
+                if (data.numerosControlTabla.length !== usuariosTabla.numerosControl.length ||
+                    data.correosTabla.length !== usuariosTabla.correos.length) {
+                    usuariosTabla.numerosControl = data.numerosControlTabla;
+                    usuariosTabla.correos = data.correosTabla;
+                }
+
+                return !data.numeroControlExiste && !data.correoExiste;
+            } catch (error) {
+                console.error("Error al validar datos:", error);
+                return false;
+            }
+        }
+
+        // Resetear validaciones previas
+        function resetearValidaciones() {
+            const spans = document.querySelectorAll("[data-valmsg-for]");
+            spans.forEach(span => {
+                span.textContent = "";
+                span.className = "field-validation-valid";
+            });
+
+            const inputs = document.querySelectorAll("#formNuevoUsuario input");
+            inputs.forEach(input => input.setCustomValidity(""));
+        }
+
+        // Mostrar errores de validación local
+        function mostrarErroresLocales(numeroControlExiste, correoExiste) {
+            // Validación para número de control
+            const spanNumeroControl = document.querySelector("[data-valmsg-for='UsuarioRegistro.NumeroControl']");
+            const inputNumeroControl = document.getElementById("UsuarioRegistro_NumeroControl");
+            if (numeroControlExiste) {
+                spanNumeroControl.textContent = "Este número de control ya está registrado";
+                spanNumeroControl.className = "text-danger field-validation-error";
+                inputNumeroControl.setCustomValidity("Número de control ya registrado");
+            }
+
+            // Validación para correo
+            const spanCorreo = document.querySelector("[data-valmsg-for='UsuarioRegistro.Correo']");
+            const inputCorreo = document.getElementById("UsuarioRegistro_Correo");
+            if (correoExiste) {
+                spanCorreo.textContent = "Este correo ya está registrado";
+                spanCorreo.className = "text-danger field-validation-error";
+                inputCorreo.setCustomValidity("Correo ya registrado");
+            }
+        }
+
+        // Mostrar errores de validación remota
+        function mostrarErroresRemotos(numeroControlExiste, correoExiste) {
+            // Validación para número de control
+            const spanNumeroControl = document.querySelector("[data-valmsg-for='UsuarioRegistro.NumeroControl']");
+            const inputNumeroControl = document.getElementById("UsuarioRegistro_NumeroControl");
+            if (numeroControlExiste) {
+                spanNumeroControl.textContent = "Este número de control ya está registrado";
+                spanNumeroControl.className = "text-danger field-validation-error";
+                inputNumeroControl.setCustomValidity("Número de control ya registrado");
+            }
+
+            // Validación para correo
+            const spanCorreo = document.querySelector("[data-valmsg-for='UsuarioRegistro.Correo']");
+            const inputCorreo = document.getElementById("UsuarioRegistro_Correo");
+            if (correoExiste) {
+                spanCorreo.textContent = "Este correo ya está registrado";
+                spanCorreo.className = "text-danger field-validation-error";
+                inputCorreo.setCustomValidity("Correo ya registrado");
+            }
+        }
+
+        // Filtrar tabla de usuarios
+        function filtrarTabla() {
+            const input = document.getElementById("buscador").value.toLowerCase();
+            const rows = document.querySelectorAll("#tablaUsuarios tbody tr");
+
+            rows.forEach(row => {
+                const nombre = row.cells[0].textContent.toLowerCase();
+                const numeroControl = row.cells[2].textContent.toLowerCase();
+                row.style.display = (nombre.includes(input) || numeroControl.includes(input)) ? "" : "none";
+            });
+        }
+
+        // Consulta crédito actual
+        document.getElementById("numeroControlCredito").addEventListener("input", function () {
+            const numeroControl = this.value;
+            const divCredito = document.getElementById("creditoActual");
+
+            if (numeroControl.length === 8) {
+                fetch(`/Usuarios/ObtenerCredito?numeroControl=${numeroControl}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            divCredito.textContent = `Crédito actual: $${data.credito}`;
+                        } else {
+                            divCredito.textContent = data.mensaje;
+                        }
+                    });
+            } else {
+                divCredito.textContent = "";
+            }
+        });
+
+        // Event listeners al cargar el DOM
+        document.addEventListener("DOMContentLoaded", function() {
+            cargarDatosTabla();
+
+            // Validación al salir de los campos
+            document.getElementById("UsuarioRegistro_NumeroControl")?.addEventListener("blur", async function() {
+                await validarDatosUnicos();
+            });
+
+            document.getElementById("UsuarioRegistro_Correo")?.addEventListener("blur", async function() {
+                await validarDatosUnicos();
+            });
+
+            // Validación antes de enviar el formulario
+            document.getElementById("formCrearUsuario")?.addEventListener("submit", async function(e) {
+                const esValido = await validarDatosUnicos();
+                if (!esValido) {
+                    e.preventDefault();
+                    alert("Por favor corrige los errores antes de enviar");
+                }
+            });
+
+            // Limpieza automática tras envío exitoso
+            document.getElementById("formCrearUsuario")?.addEventListener("submit", function() {
+                setTimeout(() => {
+                    this.reset();
+                    cerrarFormulario('formNuevoUsuario');
+                    // Recargar datos de la tabla después de crear usuario
+                    cargarDatosTabla();
+                }, 1000);
+            });
+
+            document.getElementById("formCredito")?.addEventListener("submit", function() {
+                setTimeout(() => {
+                    this.reset();
+                    cerrarFormulario('formAumentoCredito');
+                }, 1000);
+            });
+        });
+    </script>
+}
+@await Html.PartialAsync("_ValidationScriptsPartial")
+}

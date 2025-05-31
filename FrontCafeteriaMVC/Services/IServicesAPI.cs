@@ -29,7 +29,7 @@ namespace FrontCafeteriaMVC.Services
         Task<List<HistorialCredito>> ObtenerHistorialCreditoGeneralAsync();
         Task<List<HistorialCredito>> ObtenerHistorialCreditoAsync(string numeroControl); Task<List<Venta>> GetVentasFiltradasAsync(DateTime? desde, DateTime? hasta);
 
-      
+
         Task<List<DetalleVentaView>> GetReporteDetalladoAsync(DateTime? desde, DateTime? hasta);
         Task<List<VentaAgrupada>> GetVentasAgrupadasAsync(DateTime? desde, DateTime? hasta);
 
@@ -40,6 +40,14 @@ namespace FrontCafeteriaMVC.Services
         Task<decimal?> ObtenerCreditoAsync(string numeroControl);
         Task<List<HistorialCreditoVM>> ObtenerHistorialAsync(string numeroControl);
         Task<(string base64, string downloadUrl)> ObtenerQrAsync(string numeroControl);
+
+        Task<bool> VerificarNumeroControlExistenteAsync(string numeroControl);
+        Task<bool> VerificarCorreoExistenteAsync(string correo);
+        Task<List<string>> ObtenerNumerosControlAsync();
+        Task<List<string>> ObtenerCorreosAsync();
+
+        Task<decimal> ObtenerCreditoLiquidacionAsync();
+
 
     }
 }

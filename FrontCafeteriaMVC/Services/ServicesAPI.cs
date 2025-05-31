@@ -24,7 +24,7 @@ namespace FrontCafeteriaMVC.Services
 
         public async Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login)
         {
-        
+
             var response = await _http.PostAsJsonAsync("api/Auth/login", login);
 
             if (!response.IsSuccessStatusCode)
@@ -106,6 +106,13 @@ namespace FrontCafeteriaMVC.Services
         {
             AgregarTokenHeader();
             var response = await _http.PostAsJsonAsync("api/Usuarios", usuario);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error al registrar usuario: {error}");
+            }
+
             return response.IsSuccessStatusCode;
         }
 
@@ -186,17 +193,23 @@ namespace FrontCafeteriaMVC.Services
         {
             AgregarTokenHeader();
             if (string.IsNullOrWhiteSpace(numeroControl))
-                return await ObtenerHistorialCreditoGeneralAsync(); // Cambio importante aquí
+                return new List<HistorialCredito>(); // Mejor devolver vacío que hacer otra llamada
 
-            string url = $"api/Usuarios/historial-credito/{numeroControl}";
+            // Corregir la ruta para que coincida con el controlador
+            string url = $"api/UsuarioNC/historial-credito/{numeroControl}";
             var response = await _http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<List<HistorialCredito>>();
             }
-
-            return new List<HistorialCredito>();
+            else
+            {
+                // Loggear el error para diagnóstico
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error obteniendo historial: {response.StatusCode} - {errorContent}");
+                return new List<HistorialCredito>();
+            }
         }
 
 
@@ -421,16 +434,96 @@ namespace FrontCafeteriaMVC.Services
         public async Task<(string base64, string downloadUrl)> ObtenerQrAsync(string numeroControl)
         {
             AgregarTokenHeader();
-            var resp = await _http.GetAsync($"api/UsuarioNC/qr/{numeroControl}");
-            if (!resp.IsSuccessStatusCode) return (null, null);
+            try
+            {
+                var resp = await _http.GetAsync($"api/UsuarioNC/qr/{numeroControl}");
 
-            var bytes = await resp.Content.ReadAsByteArrayAsync();
-            var base64 = Convert.ToBase64String(bytes);
-            // misma URL sirve para descargar
-            var downloadUrl = _http.BaseAddress + $"api/UsuarioNC/qr/{numeroControl}";
-            return ($"data:image/png;base64,{base64}", downloadUrl);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var error = await resp.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error QR: {resp.StatusCode} - {error}");
+                    return (null, null);
+                }
+
+                var bytes = await resp.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+
+                // Devuelve solo el base64 sin el prefijo (la vista lo agregará)
+                // La URL de descarga debe ser manejada de otra forma ya que requiere autenticación
+                return (base64, null); // O considera generar un endpoint especial para descarga sin auth
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Excepción al obtener QR: {ex.Message}");
+                return (null, null);
+            }
         }
 
+        public async Task<bool> VerificarNumeroControlExistenteAsync(string numeroControl)
+        {
+            try
+            {
+                AgregarTokenHeader();
+                var response = await _http.GetAsync($"api/Usuarios/ExisteNumeroControl?numeroControl={numeroControl}");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<bool>();
+            }
+            catch
+            {
+                return false; // O maneja el error según necesites
+            }
+        }
+
+        public async Task<bool> VerificarCorreoExistenteAsync(string correo)
+        {
+            try
+            {
+                AgregarTokenHeader();
+                var response = await _http.GetAsync($"api/Usuarios/ExisteCorreo?correo={Uri.EscapeDataString(correo)}");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<bool>();
+            }
+            catch
+            {
+                return false; // O maneja el error según necesites
+            }
+        }
+
+        public async Task<List<string>> ObtenerNumerosControlAsync()
+        {
+            AgregarTokenHeader();
+            var response = await _http.GetAsync("api/Usuarios/NumerosControl");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<string>>();
+        }
+
+        public async Task<List<string>> ObtenerCorreosAsync()
+        {
+            AgregarTokenHeader();
+            var response = await _http.GetAsync("api/Usuarios/Correos");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<string>>();
+        }
+
+        public async Task<decimal> ObtenerCreditoLiquidacionAsync()
+        {
+            AgregarTokenHeader(); // si aplica
+
+            var response = await _http.GetAsync("api/Usuarios/credito-liquidacion");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var obj = System.Text.Json.JsonSerializer.Deserialize<CreditoDTO>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return obj?.Credito ?? 0;
+            }
+
+            return 0;
+        }
 
 
     }
