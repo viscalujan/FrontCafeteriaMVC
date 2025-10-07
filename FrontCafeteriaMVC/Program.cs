@@ -42,6 +42,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
     });
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://*:{port}");
+
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -50,16 +54,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseSession();           // Primero sesión
-app.UseAuthentication();    // Luego autenticación
-app.UseAuthorization();     // Luego autorización
+app.UseSession();           
+app.UseAuthentication();   
+app.UseAuthorization();    
 
-// Ruta por defecto
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}");
