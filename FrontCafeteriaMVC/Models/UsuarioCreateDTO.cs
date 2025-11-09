@@ -1,16 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace FrontCafeteriaMVC.Models
 {
     public class UsuarioCreateDTO
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; }
-        public string Correo { get; set; }
-
-        [JsonPropertyName("Contra")]
-        public string NumeroControl { get; set; }
-
-        public decimal Credito { get; set; }
+        [Required] public string Nombre { get; set; } = string.Empty;
+        [Required, EmailAddress] public string Correo { get; set; } = string.Empty;
+        [Required, RegularExpression(@"^\d{8}$")] public string NumeroControl { get; set; } = string.Empty;
+        [Range(0, double.MaxValue)] public decimal Credito { get; set; }
+        [MinLength(8)] public string Contrasena { get; set; } = string.Empty;
+        public string? RolUsuario { get; set; }  // opcional si el endpoint lo usa
     }
 }

@@ -43,18 +43,26 @@ namespace FrontCafeteriaMVC.Services
         public async Task<List<Producto>> GetProductosAsync()
         {
             AgregarTokenHeader();
-            var response = await _http.GetAsync("api/Productos");
+            var response = await _http.GetAsync("api/Productos/productos");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<Producto>>(json);
         }
 
+        // public async Task<Producto> GetProductoByIdAsync(int id)
+        // {
+        //     AgregarTokenHeader();
+        //var response = await _http.GetAsync($"api/Productos/{id}");
+        //    response.EnsureSuccessStatusCode();
+        //   return await response.Content.ReadFromJsonAsync<Producto>();
+        // }
         public async Task<Producto> GetProductoByIdAsync(int id)
         {
-            AgregarTokenHeader();
             var response = await _http.GetAsync($"api/Productos/{id}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<Producto>();
+
+            var producto = await response.Content.ReadFromJsonAsync<Producto>();
+            return producto!;
         }
 
         public async Task<bool> CrearProductoAsync(Producto producto)
