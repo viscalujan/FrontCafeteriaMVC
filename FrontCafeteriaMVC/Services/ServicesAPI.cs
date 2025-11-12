@@ -24,7 +24,7 @@ namespace FrontCafeteriaMVC.Services
 
         public async Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login)
         {
-
+        
             var response = await _http.PostAsJsonAsync("api/Auth/login", login);
 
             if (!response.IsSuccessStatusCode)
@@ -43,18 +43,26 @@ namespace FrontCafeteriaMVC.Services
         public async Task<List<Producto>> GetProductosAsync()
         {
             AgregarTokenHeader();
-            var response = await _http.GetAsync("api/Productos");
+            var response = await _http.GetAsync("api/Productos/productos");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<Producto>>(json);
         }
 
+        // public async Task<Producto> GetProductoByIdAsync(int id)
+        // {
+        //     AgregarTokenHeader();
+        //var response = await _http.GetAsync($"api/Productos/{id}");
+        //    response.EnsureSuccessStatusCode();
+        //   return await response.Content.ReadFromJsonAsync<Producto>();
+        // }
         public async Task<Producto> GetProductoByIdAsync(int id)
         {
-            AgregarTokenHeader();
             var response = await _http.GetAsync($"api/Productos/{id}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<Producto>();
+
+            var producto = await response.Content.ReadFromJsonAsync<Producto>();
+            return producto!;
         }
 
         public async Task<bool> CrearProductoAsync(Producto producto)
@@ -96,7 +104,7 @@ namespace FrontCafeteriaMVC.Services
         public async Task<List<UsuarioDTO>> GetUsuariosAsync()
         {
             AgregarTokenHeader();
-            var response = await _http.GetAsync("api/Usuarios");
+            var response = await _http.GetAsync("api/Usuarios/listar-usuarios");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<List<UsuarioDTO>>(json);
@@ -105,14 +113,7 @@ namespace FrontCafeteriaMVC.Services
         public async Task<bool> RegistrarUsuarioAsync(UsuarioRegistroDTO usuario)
         {
             AgregarTokenHeader();
-            var response = await _http.PostAsJsonAsync("api/Usuarios", usuario);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error al registrar usuario: {error}");
-            }
-
+            var response = await _http.PostAsJsonAsync("api/Usuarios/crear-usuario", usuario);
             return response.IsSuccessStatusCode;
         }
 
@@ -193,23 +194,17 @@ namespace FrontCafeteriaMVC.Services
         {
             AgregarTokenHeader();
             if (string.IsNullOrWhiteSpace(numeroControl))
-                return new List<HistorialCredito>(); // Mejor devolver vacío que hacer otra llamada
+                return await ObtenerHistorialCreditoGeneralAsync(); // Cambio importante aquí
 
-            // Corregir la ruta para que coincida con el controlador
-            string url = $"api/UsuarioNC/historial-credito/{numeroControl}";
+            string url = $"api/Usuarios/historial-credito/{numeroControl}";
             var response = await _http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<List<HistorialCredito>>();
             }
-            else
-            {
-                // Loggear el error para diagnóstico
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error obteniendo historial: {response.StatusCode} - {errorContent}");
-                return new List<HistorialCredito>();
-            }
+
+            return new List<HistorialCredito>();
         }
 
 
@@ -434,97 +429,40 @@ namespace FrontCafeteriaMVC.Services
         public async Task<(string base64, string downloadUrl)> ObtenerQrAsync(string numeroControl)
         {
             AgregarTokenHeader();
-            try
-            {
-                var resp = await _http.GetAsync($"api/UsuarioNC/qr/{numeroControl}");
+            var resp = await _http.GetAsync($"api/UsuarioNC/qr/{numeroControl}");
+            if (!resp.IsSuccessStatusCode) return (null, null);
 
-                if (!resp.IsSuccessStatusCode)
-                {
-                    var error = await resp.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Error QR: {resp.StatusCode} - {error}");
-                    return (null, null);
-                }
-
-                var bytes = await resp.Content.ReadAsByteArrayAsync();
-                var base64 = Convert.ToBase64String(bytes);
-
-                // Devuelve solo el base64 sin el prefijo (la vista lo agregará)
-                // La URL de descarga debe ser manejada de otra forma ya que requiere autenticación
-                return (base64, null); // O considera generar un endpoint especial para descarga sin auth
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Excepción al obtener QR: {ex.Message}");
-                return (null, null);
-            }
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            var base64 = Convert.ToBase64String(bytes);
+            // misma URL sirve para descargar
+            var downloadUrl = _http.BaseAddress + $"api/UsuarioNC/qr/{numeroControl}";
+            return ($"data:image/png;base64,{base64}", downloadUrl);
         }
 
-        public async Task<bool> VerificarNumeroControlExistenteAsync(string numeroControl)
-        {
-            try
-            {
-                AgregarTokenHeader();
-                var response = await _http.GetAsync($"api/Usuarios/ExisteNumeroControl?numeroControl={numeroControl}");
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<bool>();
-            }
-            catch
-            {
-                return false; // O maneja el error según necesites
-            }
-        }
 
-        public async Task<bool> VerificarCorreoExistenteAsync(string correo)
-        {
-            try
-            {
-                AgregarTokenHeader();
-                var response = await _http.GetAsync($"api/Usuarios/ExisteCorreo?correo={Uri.EscapeDataString(correo)}");
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadFromJsonAsync<bool>();
-            }
-            catch
-            {
-                return false; // O maneja el error según necesites
-            }
-        }
-
-        public async Task<List<string>> ObtenerNumerosControlAsync()
+        public async Task<bool> TransferirCreditoAsync(TransferenciaCreditoDTO dto, string numeroControlEmisor)
         {
             AgregarTokenHeader();
-            var response = await _http.GetAsync("api/Usuarios/NumerosControl");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<string>>();
-        }
 
-        public async Task<List<string>> ObtenerCorreosAsync()
-        {
-            AgregarTokenHeader();
-            var response = await _http.GetAsync("api/Usuarios/Correos");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<string>>();
-        }
-
-        public async Task<decimal> ObtenerCreditoLiquidacionAsync()
-        {
-            AgregarTokenHeader(); // si aplica
-
-            var response = await _http.GetAsync("api/Usuarios/credito-liquidacion");
-
-            if (response.IsSuccessStatusCode)
+            // Construir el payload con el emisor y los datos del formulario
+            var payload = new
             {
-                var json = await response.Content.ReadAsStringAsync();
-                var obj = System.Text.Json.JsonSerializer.Deserialize<CreditoDTO>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                NumeroControlEmisor = numeroControlEmisor,
+                NumeroControlReceptor = dto.NumeroControlReceptor,
+                Cantidad = dto.Cantidad,
+                ContrasenaEmisor = dto.ContrasenaEmisor
+            };
 
-                return obj?.Credito ?? 0;
+            var response = await _http.PostAsJsonAsync("api/UsuarioNC/transferir-credito", payload);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Error en la transferencia: {error}");
             }
 
-            return 0;
+            return true;
         }
-
 
     }
 }

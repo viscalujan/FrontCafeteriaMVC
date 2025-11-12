@@ -1,29 +1,36 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FrontCafeteriaMVC.Models
 {
     public class Usuario
     {
-        public int Id { get; set; }
+        [Key]
+        [Column("id_usuario")]
+        public int IdUsuario { get; set; }
 
-        [Required(ErrorMessage = "El nombre es obligatorio.")]
-        public string Nombre { get; set; }
+        [Column("nombre_usuario")]
+        public string NombreUsuario { get; set; } = null!;
 
-        [Required(ErrorMessage = "El correo es obligatorio.")]
-        [EmailAddress(ErrorMessage = "Debe ser un correo válido.")]
-        public string Correo { get; set; }
+        [Column("correo_usuario")]
+        public string CorreoUsuario { get; set; } = null!;
 
-        [Required(ErrorMessage = "El número de control es obligatorio.")]
-        [RegularExpression(@"^\d{8}$", ErrorMessage = "El número de control debe ser de 8 dígitos.")]
-        [JsonPropertyName("Contra")] // 👈 Aquí mapeas que viene/va como "Contra"
-        public string NumeroControl { get; set; }
+        [Column("numero_control")]
+        public string? NumeroControl { get; set; }
 
-        public string Huella { get; set; } // En futuro para huella
-
-        [Range(50, double.MaxValue, ErrorMessage = "El crédito inicial debe ser mayor o igual a 50.")]
+        [Column("credito")]
         public decimal Credito { get; set; }
 
-        public int Rol { get; set; } = 0;
+        [Column("huella")]
+        public string? Huella { get; set; }
+
+        [Column("rol_usuario")]
+        public string? RolUsuario { get; set; }
+
+        [Column("codigqrtexto")]
+        public string? CodigoQRTexto { get; set; }
+
+        [Column("contra_usuario")]
+        public string ContraUsuario { get; set; } = null!;
     }
 }

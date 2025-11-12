@@ -1,0 +1,56 @@
+﻿using System;
+using Humanizer;
+using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using static System.Collections.Specialized.BitVector32;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
+
+@model FrontCafeteriaMVC.Models.TransferenciaCreditoDTO
+@{
+    ViewData["Title"] = "Transferir Saldo";
+}
+
+< div class= "container mt-5 d-flex justify-content-center" >
+    < div class= "card shadow-lg p-4" style = "max-width: 420px; width: 100%; border-radius: 20px;" >
+        < h4 class= "text-center mb-3" > Transferir Saldo </ h4 >
+        < p class= "text-muted text-center mb-4" > Transfiere saldo a otro alumno utilizando su número de control</p>
+
+        @if (ViewBag.Mensaje != null)
+        {
+            <div class= "alert alert-success" > @ViewBag.Mensaje </ div >
+        }
+
+        @if(ViewBag.Error != null)
+        {
+            < div class= "alert alert-danger" > @ViewBag.Error </ div >
+        }
+
+        < form asp - action = "Index" method = "post" >
+            < div class= "form-group mb-3" >
+                < label class= "fw-semibold" > Número de Control del Destinatario</label>
+                <input asp-for="NumeroControlReceptor" class= "form-control" placeholder = "12345678" maxlength = "10" minlength = "8" required />
+                < span asp - validation -for= "NumeroControlReceptor" class= "text-danger" ></ span >
+                < small class= "text-muted" > 8 - 10 dígitos </ small >
+            </ div >
+
+            < div class= "form-group mb-3" >
+                < label class= "fw-semibold" > Contraseña </ label >
+                < input asp -for= "ContrasenaEmisor" class= "form-control" type = "password" placeholder = "********" required />
+                < span asp - validation -for= "ContrasenaEmisor" class= "text-danger" ></ span >
+            </ div >
+
+            < div class= "form-group mb-4" >
+                < label class= "fw-semibold" > Monto de Transferencia</label>
+                <input asp-for="Cantidad" class= "form-control" type = "number" step = "0.01" min = "0.01" placeholder = "0.00" required />
+                < span asp - validation -for= "Cantidad" class= "text-danger" ></ span >
+                < small class= "text-muted" > Ingresa un monto positivo</small>
+            </div>
+            
+            <button type="submit" class= "btn btn-dark w-100" > Confirmar Transferencia </ button >
+        </ form >
+    </ div >
+</ div >
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

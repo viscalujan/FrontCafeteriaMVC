@@ -33,7 +33,7 @@ namespace FrontCafeteriaMVC.Controllers
                     .ToList();
             }
 
-            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<DetalleVenta>>("carrito") ?? new();
+            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<VentaDetalle>>("carrito") ?? new();
             var productosDic = productos.ToDictionary(p => p.Id, p => p);
 
             // Calcular total correctamente
@@ -82,7 +82,7 @@ namespace FrontCafeteriaMVC.Controllers
             if (producto == null || Cantidad <= 0 || Cantidad > producto.Cantidad)
                 return BadRequest("Producto no válido o cantidad excede el stock.");
 
-            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<DetalleVenta>>("carrito") ?? new();
+            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<VentaDetalle>>("carrito") ?? new();
 
             var existente = carrito.FirstOrDefault(c => c.ProductoId == ProductoId);
             if (existente != null)
@@ -91,7 +91,7 @@ namespace FrontCafeteriaMVC.Controllers
             }
             else
             {
-                carrito.Add(new DetalleVenta
+                carrito.Add(new VentaDetalle
                 {
                     ProductoId = ProductoId,
                     Cantidad = Cantidad
@@ -105,7 +105,7 @@ namespace FrontCafeteriaMVC.Controllers
         [HttpPost]
         public IActionResult QuitarDelCarrito(int ProductoId)
         {
-            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<DetalleVenta>>("carrito") ?? new();
+            var carrito = _http.HttpContext!.Session.GetObjectFromJson<List<VentaDetalle>>("carrito") ?? new();
             var item = carrito.FirstOrDefault(c => c.ProductoId == ProductoId);
             if (item != null)
                 carrito.Remove(item);
@@ -119,7 +119,7 @@ namespace FrontCafeteriaMVC.Controllers
         {
             try
             {
-                var carrito = _http.HttpContext.Session.GetObjectFromJson<List<DetalleVenta>>("carrito");
+                var carrito = _http.HttpContext.Session.GetObjectFromJson<List<VentaDetalle>>("carrito");
                 if (carrito == null || !carrito.Any())
                 {
                     TempData["Error"] = "El carrito está vacío";
