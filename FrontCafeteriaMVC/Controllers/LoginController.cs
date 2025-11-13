@@ -19,7 +19,7 @@ namespace FrontCafeteriaMVC.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(); 
+            return View();
         }
 
         [HttpPost]
@@ -29,12 +29,19 @@ namespace FrontCafeteriaMVC.Controllers
             {
                 var (token, rol, numeroControl) = await _services.LoginAsync(login);
 
+                // 🔹 ESTA LÍNEA ERA LA QUE FALTABA (muy importante)
+                if (!string.IsNullOrEmpty(numeroControl))
+                {
+                    HttpContext.Session.SetString("NumeroControl", numeroControl);
+                }
+
+                // Crear claims
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, login.Correo),
-            new Claim(ClaimTypes.Role, rol),
-            new Claim("JwtToken", token) // Guardamos el token JWT como claim
-        };
+                {
+                    new Claim(ClaimTypes.Name, login.Correo),
+                    new Claim(ClaimTypes.Role, rol),
+                    new Claim("JwtToken", token)
+                };
 
                 if (rol == "alumno" && !string.IsNullOrEmpty(numeroControl))
                 {
@@ -56,10 +63,10 @@ namespace FrontCafeteriaMVC.Controllers
                     claimsPrincipal,
                     authProperties);
 
-                // Redirige según el rol
+                // Redirigir según rol
                 return rol switch
                 {
-                    "ventas" => RedirectToAction("index", "Ventas"),
+                    "ventas" => RedirectToAction("Index", "Ventas"),
                     "inventario" => RedirectToAction("HomeInventario", "Login"),
                     "alumno" => RedirectToAction("MiCuenta", "Usuarios"),
                     _ => RedirectToAction("Index", "Home")
@@ -67,7 +74,6 @@ namespace FrontCafeteriaMVC.Controllers
             }
             catch (Exception ex)
             {
-                // Log del error para diagnóstico
                 Console.WriteLine($"Error en login: {ex.Message}");
                 ViewBag.Error = "Credenciales inválidas.";
                 return View(login);
@@ -75,13 +81,12 @@ namespace FrontCafeteriaMVC.Controllers
         }
 
         [HttpPost]
-        [HttpPost]
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear(); 
-            return RedirectToAction("Index", "Login"); 
+            HttpContext.Session.Clear();
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Login");
         }
-
 
         public IActionResult HomeInventario()
         {

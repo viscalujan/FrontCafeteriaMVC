@@ -110,11 +110,38 @@ namespace FrontCafeteriaMVC.Services
             return JsonConvert.DeserializeObject<List<UsuarioDTO>>(json);
         }
 
+        // public async Task<bool> RegistrarUsuarioAsync(UsuarioRegistroDTO usuario)
+        //   {
+        //     AgregarTokenHeader();
+        //      var response = await _http.PostAsJsonAsync("api/Usuarios/crear-usuario", usuario);
+        //      return response.IsSuccessStatusCode;
+        //   }
         public async Task<bool> RegistrarUsuarioAsync(UsuarioRegistroDTO usuario)
         {
             AgregarTokenHeader();
-            var response = await _http.PostAsJsonAsync("api/Usuarios/crear-usuario", usuario);
-            return response.IsSuccessStatusCode;
+
+            // Convertir DTO del front al DTO que espera el backend
+            var dtoBack = new
+            {
+                Nombre = usuario.Nombre,
+                Correo = usuario.Correo,
+                NumeroControl = usuario.NumeroControl,
+                Credito = usuario.Credito,
+                Contra = usuario.Contrasena,     // 👈 Aquí está la magia
+                Rol = "alumno",                  // 👈 Agregado porque tu backend lo pide
+                CodigoQRTexto = usuario.NumeroControl // 👈 si necesitas QR inicial
+            };
+
+            var response = await _http.PostAsJsonAsync("api/Usuarios/crear-usuario", dtoBack);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("⚠ ERROR API CREAR USUARIO: " + error);
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<Usuario> GetUsuarioPorNumeroControlAsync(string numeroControl)
