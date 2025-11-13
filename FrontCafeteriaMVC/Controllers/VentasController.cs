@@ -2,6 +2,7 @@
 using FrontCafeteriaMVC.Helpers;
 using FrontCafeteriaMVC.Models;
 using FrontCafeteriaMVC.Services;
+using Humanizer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -145,12 +146,17 @@ namespace FrontCafeteriaMVC.Controllers
                     return RedirectToAction("Index");
                 }
 
+
+
                 var venta = new VentaCreate
                 {
                     MetodoPago = metodoPago?.ToLower() ?? "",
                     HashQR = hashQR,
-                    Detalles = carrito
+                    Detalles = carrito,
+                    FkIdUsuario = 1
+
                 };
+
 
                 if (venta.MetodoPago == "credito" && string.IsNullOrWhiteSpace(venta.HashQR))
                 {

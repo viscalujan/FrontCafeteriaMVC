@@ -27,5 +27,6 @@ namespace FrontCafeteriaMVC.Models
         // 🔹 Detalles de la venta (lista de productos y cantidades)
         [JsonPropertyName("detalles")]
         public List<VentaDetalle> Detalles { get; set; } = new();
+
     }
 }
