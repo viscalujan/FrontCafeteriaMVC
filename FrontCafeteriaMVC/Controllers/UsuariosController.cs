@@ -141,9 +141,40 @@ namespace FrontCafeteriaMVC.Controllers
             return View();
         }
 
+        // public async Task<IActionResult> MiCuenta()
+        // {
+        //    var numeroControl = User.Claims.FirstOrDefault(c => c.Type == "NumeroControl")?.Value;
+        //   var nombre = User.Identity?.Name;
+
+        //  if (string.IsNullOrWhiteSpace(numeroControl))
+        //      return RedirectToAction("Index", "Login");
+
+        //   var credito = await _servicesApi.ObtenerCreditoAsync(numeroControl) ?? 0;
+        //  var historial = await _servicesApi.ObtenerHistorialCreditoAsync(numeroControl);
+
+        //  var (base64, url) = await _servicesApi.ObtenerQrAsync(numeroControl);
+
+        //  var vm = new MiCuentaVM
+        //  {
+        //  NumeroControl = numeroControl,
+        //    Nombre = nombre,
+        //   Credito = credito,
+        //  Historial = historial.Select(h => new HistorialCreditoVM
+        //  {
+        //Fecha = h.Fecha,
+        //  Cantidad = h.Cantidad,
+        //    AutCorreo = h.AutCorreo
+        //  }).ToList(),
+        //      QrBase64 = base64,             // 👉 sin el prefijo aquí
+        //    QrDownloadUrl = url
+        //   };
+
+        //  return View(vm);
+        //}
         public async Task<IActionResult> MiCuenta()
         {
-            var numeroControl = User.Claims.FirstOrDefault(c => c.Type == "NumeroControl")?.Value;
+            // Ahora sí toma el número de control CORRECTO
+            var numeroControl = HttpContext.Session.GetString("NumeroControl");
             var nombre = User.Identity?.Name;
 
             if (string.IsNullOrWhiteSpace(numeroControl))
@@ -165,7 +196,7 @@ namespace FrontCafeteriaMVC.Controllers
                     Cantidad = h.Cantidad,
                     AutCorreo = h.AutCorreo
                 }).ToList(),
-                QrBase64 = base64,             // 👉 sin el prefijo aquí
+                QrBase64 = base64,
                 QrDownloadUrl = url
             };
 
