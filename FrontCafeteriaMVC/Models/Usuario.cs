@@ -7,7 +7,7 @@ namespace FrontCafeteriaMVC.Models
     {
         [Key]
         [Column("id_usuario")]
-        public int IdUsuario { get; set; }
+        public int Id { get; set; }
 
         [Column("nombre_usuario")]
         public string NombreUsuario { get; set; } = null!;

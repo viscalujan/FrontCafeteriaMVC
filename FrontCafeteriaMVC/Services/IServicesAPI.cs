@@ -49,7 +49,12 @@ namespace FrontCafeteriaMVC.Services
         Task<List<HistorialCredito>> ObtenerHistorialFiltradoAsync(DateTime? desde, DateTime? hasta, string numeroControl);
         Task<byte[]> ExportarHistorialExcelAsync(DateTime? desde, DateTime? hasta, string numeroControl);
 
+        //Task<List<ProductoDTO>> GetProductosAsync();
+        Task<List<PedidoViewModel>> GetPedidosAsync();
+        Task<bool> CambiarEstadoPedidoAsync(int idPedido, int nuevoEstado);
+       // Task<object> CrearPedidoAsync(PedidoCreateDTO pedido);
 
+        Task<string> CrearPedidoAsync(PedidoCreateDTO pedido);
 
 
     }

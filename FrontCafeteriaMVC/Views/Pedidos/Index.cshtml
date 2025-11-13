@@ -1,0 +1,220 @@
+﻿@model List<FrontCafeteriaMVC.Models.Producto>
+
+@{
+    ViewData["Title"] = "Menú de productos";
+}
+
+<!-- 🔥 NumeroControl desde el controlador -->
+<input type="hidden" id="usuarioId" value="@ViewBag.UsuarioId" />
+
+<h2 class="mb-4">Menú disponible</h2>
+<div class="row">
+    <!-- LISTA DE PRODUCTOS -->
+    <div class="col-md-8">
+        <div class="row">
+            @foreach (var p in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+
+                        <!-- IMAGEN -->
+                        <img src="~/img/productos/@(p.Nombre.Replace(" ", "").ToLower()).jpg"
+                             class="card-img-top"
+                             style="height:180px; object-fit:cover;" />
+
+                        <div class="card-body">
+                            <h5 class="card-title">@p.Nombre</h5>
+
+                            <p class="text-muted mb-1">$@p.Precio</p>
+
+                            <span class="badge bg-dark">Stock: @p.Cantidad</span>
+
+                            <!-- CANTIDAD -->
+                            <div class="input-group mt-2">
+                                <button class="btn btn-outline-secondary btn-sm"
+                                        onclick="changeQty(@p.Id, -1)">
+                                    -
+                                </button>
+
+                                <input id="qty-@p.Id"
+                                       type="text"
+                                       class="form-control text-center"
+                                       value="1"
+                                       readonly />
+
+                                <button class="btn btn-outline-secondary btn-sm"
+                                        onclick="changeQty(@p.Id, 1)">
+                                    +
+                                </button>
+                            </div>
+
+                            <!-- BOTÓN -->
+                            <button class="btn btn-dark w-100 mt-2"
+                                    onclick="addToCart(@p.Id, '@p.Nombre', @p.Precio)">
+                                🛒 Agregar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- CARRITO -->
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <h4>Tu pedido</h4>
+
+            <ul id="cart-list" class="list-group mb-3"></ul>
+
+            <h5>Total: $<span id="total">0</span></h5>
+
+            <button class="btn btn-success w-100 mt-2" onclick="submitOrder()">
+                Realizar pedido
+            </button>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let cart = [];
+
+        /* ============================
+           CAMBIAR CANTIDAD
+        ============================ */
+        function changeQty(id, delta) {
+            const input = document.getElementById(`qty-${id}`);
+            let value = parseInt(input.value) + delta;
+
+            input.value = value < 1 ? 1 : value;
+        }
+
+        /* ============================
+           AGREGAR AL CARRITO
+        ============================ */
+        function addToCart(id, name, price) {
+            const qty = parseInt(document.getElementById(`qty-${id}`).value);
+
+            const existing = cart.find(x => x.id === id);
+
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({ id, name, price, qty });
+            }
+
+            renderCart();
+
+            Swal.fire({
+                icon: "success",
+                title: "Producto agregado",
+                text: `${name} x${qty}`,
+                timer: 1200,
+                showConfirmButton: false
+            });
+        }
+
+        /* ============================
+           RENDER CARRITO
+        ============================ */
+        function renderCart() {
+            const list = document.getElementById("cart-list");
+            list.innerHTML = "";
+
+            let total = 0;
+
+            cart.forEach(c => {
+                const li = document.createElement("li");
+                li.classList.add("list-group-item", "d-flex", "justify-content-between");
+
+                li.innerHTML = `
+                    ${c.name} x${c.qty}
+                    <strong>$${(c.price * c.qty).toFixed(2)}</strong>
+                `;
+
+                list.appendChild(li);
+                total += c.price * c.qty;
+            });
+
+            document.getElementById("total").innerText = total.toFixed(2);
+        }
+
+        /* ============================
+           ENVIAR PEDIDO
+        ============================ */
+                async function submitOrder() {
+            if (cart.length === 0) {
+                Swal.fire("Carrito vacío", "Agrega productos primero.", "warning");
+                return;
+            }
+
+            const usuarioId = parseInt(document.getElementById("usuarioId").value);
+
+            console.log("UsuarioId:", usuarioId);
+
+            if (!usuarioId || usuarioId <= 0) {
+                Swal.fire("Error", "No se pudo obtener el usuario. Inicia sesión otra vez.", "error");
+                return;
+            }
+
+            const detalles = cart.map(c => ({
+                productoId: c.id,
+                cantidad: c.qty
+            }));
+
+            const pedido = {
+                usuarioId: usuarioId,   // 🔥 ahora sí coincide con el backend
+                detalles: detalles
+            };
+
+            const confirm = await Swal.fire({
+                title: "¿Confirmar pedido?",
+                html: `<strong>Total: $${document.getElementById("total").innerText}</strong>`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, enviar",
+                cancelButtonText: "Cancelar"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            Swal.fire({
+                title: "Procesando...",
+                text: "Creando tu pedido...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await fetch("/Pedidos/RealizarPedido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(pedido)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                Swal.fire("Error", data.error ?? "Error desconocido", "error");
+                return;
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Pedido realizado",
+                text: "Tu pedido fue registrado correctamente.",
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            cart = [];
+            renderCart();
+        }
+
+        
+    </script>
+}

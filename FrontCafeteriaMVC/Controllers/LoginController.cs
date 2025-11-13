@@ -29,7 +29,7 @@ namespace FrontCafeteriaMVC.Controllers
             {
                 var (token, rol, numeroControl) = await _services.LoginAsync(login);
 
-                // 🔹 ESTA LÍNEA ERA LA QUE FALTABA (muy importante)
+                // 🔹 Guardar el NumeroControl en sesión (ESTE ERA EL PROBLEMA)
                 if (!string.IsNullOrEmpty(numeroControl))
                 {
                     HttpContext.Session.SetString("NumeroControl", numeroControl);
@@ -37,11 +37,11 @@ namespace FrontCafeteriaMVC.Controllers
 
                 // Crear claims
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, login.Correo),
-                    new Claim(ClaimTypes.Role, rol),
-                    new Claim("JwtToken", token)
-                };
+        {
+            new Claim(ClaimTypes.Name, login.Correo),
+            new Claim(ClaimTypes.Role, rol),
+            new Claim("JwtToken", token)
+        };
 
                 if (rol == "alumno" && !string.IsNullOrEmpty(numeroControl))
                 {
@@ -49,7 +49,6 @@ namespace FrontCafeteriaMVC.Controllers
                 }
 
                 claims.Add(new Claim("FirstLogin", "true"));
-
 
                 var authProperties = new AuthenticationProperties
                 {
@@ -82,6 +81,7 @@ namespace FrontCafeteriaMVC.Controllers
                 return View(login);
             }
         }
+
 
         [HttpPost]
         public IActionResult Logout()

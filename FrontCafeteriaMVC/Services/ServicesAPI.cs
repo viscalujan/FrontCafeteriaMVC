@@ -22,24 +22,46 @@ namespace FrontCafeteriaMVC.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        //   public async Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login)
+        //  {
+
+        //     var response = await _http.PostAsJsonAsync("api/Auth/login", login);
+
+        //     if (!response.IsSuccessStatusCode)
+        //       throw new Exception("Credenciales inválidas");
+        //
+        // Lee la respuesta genérica (puede o no tener numeroControl)
+        //   var result = await response.Content.ReadFromJsonAsync<FrontCafeteriaMVC.Models.LoginResponse>();
+
+        // Guarda el token en sesión y lo configura para futuras peticiones
+        //_httpContextAccessor.HttpContext!.Session.SetString("token", result.token);
+        // _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.token);
+
+        // Si el rol NO es alumno, numeroControl será null
+        //           return (result.token, result.rol, result.numeroControl);
+        // }
+
         public async Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login)
         {
-        
             var response = await _http.PostAsJsonAsync("api/Auth/login", login);
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception("Credenciales inválidas");
 
-            // Lee la respuesta genérica (puede o no tener numeroControl)
             var result = await response.Content.ReadFromJsonAsync<FrontCafeteriaMVC.Models.LoginResponse>();
 
-            // Guarda el token en sesión y lo configura para futuras peticiones
+            // Guardar token
             _httpContextAccessor.HttpContext!.Session.SetString("token", result.token);
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.token);
 
-            // Si el rol NO es alumno, numeroControl será null
+            // 🔥🔥🔥 AGREGA ESTO 🔥🔥🔥
+            if (!string.IsNullOrEmpty(result.numeroControl))
+                _httpContextAccessor.HttpContext.Session.SetString("NumeroControl", result.numeroControl);
+            // 🔥🔥🔥 FIN
+
             return (result.token, result.rol, result.numeroControl);
         }
+
         public async Task<List<Producto>> GetProductosAsync()
         {
             AgregarTokenHeader();
@@ -587,6 +609,60 @@ namespace FrontCafeteriaMVC.Services
         }
 
 
+        ///nuevos contenido 
+        ///
+        //public async Task<object> CrearPedidoAsync(PedidoCreateDTO pedido)
+        // {
+        //     var json = JsonConvert.SerializeObject(pedido);
+        //     var content = new StringContent(json, Encoding.UTF8, "application/json");
+        //
+        //    var response = await _http.PostAsync("api/Pedidos", content);
+        //    /     var data = await response.Content.ReadAsStringAsync();
+        //
+        //         return JsonConvert.DeserializeObject<object>(data);
+        //   }
+        public async Task<string> CrearPedidoAsync(PedidoCreateDTO pedido)
+        {
+            AgregarTokenHeader();
+
+            var json = JsonConvert.SerializeObject(pedido);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _http.PostAsync("api/Pedidos", content);
+            var data = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                return JsonConvert.SerializeObject(new
+                {
+                    success = false,
+                    status = response.StatusCode,
+                    error = data
+                });
+            }
+
+
+            return data;
+        }
+
+
+        public async Task<List<PedidoViewModel>> GetPedidosAsync()
+        {
+            AgregarTokenHeader();
+
+            var response = await _http.GetAsync("api/Pedidos/todos");
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<List<PedidoViewModel>>(json);
+        }
+
+        public async Task<bool> CambiarEstadoPedidoAsync(int idPedido, int nuevoEstado)
+        {
+            AgregarTokenHeader();
+
+            var response = await _http.PutAsync($"api/Pedidos/{idPedido}/estado?nuevoEstado={nuevoEstado}", null);
+            return response.IsSuccessStatusCode;
+        }
 
 
     }
