@@ -40,6 +40,9 @@ namespace FrontCafeteriaMVC.Services
         Task<decimal?> ObtenerCreditoAsync(string numeroControl);
         Task<List<HistorialCreditoVM>> ObtenerHistorialAsync(string numeroControl);
         Task<(string base64, string downloadUrl)> ObtenerQrAsync(string numeroControl);
+        Task<(string base64, string downloadUrl)> RegenerarQRAsync(string numeroControl);
+
+
         Task<bool> TransferirCreditoAsync(TransferenciaCreditoDTO dto, string numeroControlEmisor);
         Task<bool> EnviarQRAsync(string correoDestino, string numeroControl);
 

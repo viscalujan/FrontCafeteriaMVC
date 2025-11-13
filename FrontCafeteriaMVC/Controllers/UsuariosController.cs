@@ -227,6 +227,30 @@ namespace FrontCafeteriaMVC.Controllers
             return View(vm);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ActualizarQR(string numeroControl)
+        {
+            try
+            {
+                var (base64, downloadUrl) = await _servicesApi.RegenerarQRAsync(numeroControl);
+
+                if (base64 == null)
+                    return Json(new { success = false, message = "No se pudo regenerar el QR" });
+
+                return Json(new
+                {
+                    success = true,
+                    qrBase64 = base64,
+                    downloadUrl = downloadUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
 
     }
 }

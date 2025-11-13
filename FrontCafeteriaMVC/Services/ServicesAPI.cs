@@ -466,6 +466,28 @@ namespace FrontCafeteriaMVC.Services
             return ($"data:image/png;base64,{base64}", downloadUrl);
         }
 
+        public async Task<(string base64, string downloadUrl)> RegenerarQRAsync(string numeroControl)
+        {
+            AgregarTokenHeader();
+
+            var resp = await _http.PostAsync($"api/UsuarioNC/regenerar-qr/{numeroControl}", null);
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                var error = await resp.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error regenerar QR: {resp.StatusCode} - {error}");
+                return (null, null);
+            }
+
+            var json = await resp.Content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<dynamic>(json);
+
+            string base64 = data.qrBase64;
+            string downloadUrl = $"{_http.BaseAddress}api/UsuarioNC/qr/{numeroControl}";
+
+            return (base64, downloadUrl);
+        }
+
 
         public async Task<bool> TransferirCreditoAsync(TransferenciaCreditoDTO dto, string numeroControlEmisor)
         {

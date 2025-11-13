@@ -13,18 +13,95 @@
 
 <div class="card shadow-sm p-4 mb-4">
     <h4>Mi Código QR</h4>
+
     @if (!string.IsNullOrEmpty(Model.QrBase64))
     {
-        <img src="@Model.QrBase64" class="img-thumbnail" style="max-width: 200px;" />
-        <br />
-        <a class="btn btn-primary mt-2" href="@Model.QrDownloadUrl" download="codigo_qr.png">Descargar QR</a>
-    }
+        <div class="text-center">
+            <img id="qrImage"
+                 src="@Model.QrBase64"
+                 class="img-thumbnail"
+                 style="max-width: 200px;" />
+            <br />
 
+            <a id="downloadQrBtn"
+               class="btn btn-primary mt-2"
+               href="@Model.QrDownloadUrl"
+               download="codigo_qr.png">
+                Descargar QR
+            </a>
+
+            <button id="btnActualizarQR"
+                    class="btn btn-warning mt-2"
+                    onclick="actualizarQR()">
+                <span id="spinnerQR" class="spinner-border spinner-border-sm me-2 d-none"></span>
+                Actualizar QR
+            </button>
+        </div>
+    }
     else
     {
         <p>No hay código QR disponible.</p>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function actualizarQR() {
+
+            const numeroControl = "@Model.NumeroControl";
+            const btn = document.getElementById("btnActualizarQR");
+            const spinner = document.getElementById("spinnerQR");
+            const qrImage = document.getElementById("qrImage");
+            const downloadBtn = document.getElementById("downloadQrBtn");
+
+            // --- ACTIVAR SPINNER ---
+            spinner.classList.remove("d-none");
+            btn.disabled = true;
+            btn.innerText = " Actualizando...";
+
+            fetch(`/Usuarios/ActualizarQR?numeroControl=${numeroControl}`, {
+                method: "POST",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(r => r.json())
+            .then(data => {
+
+                if (data.success) {
+
+                    // Pequeño efecto visual
+                    qrImage.style.opacity = "0.4";
+
+                    setTimeout(() => {
+                        // Actualizar imagen
+                        qrImage.src = "data:image/png;base64," + data.qrBase64;
+                        qrImage.style.opacity = "1";
+                    }, 300);
+
+                    // Actualizar URL del botón "Descargar"
+                    downloadBtn.href = data.downloadUrl;
+
+                } else {
+                    alert("Error: " + data.message);
+                }
+
+            })
+            .catch(err => {
+                alert("Error al actualizar QR: " + err);
+            })
+            .finally(() => {
+                // --- DESACTIVAR SPINNER ---
+                spinner.classList.add("d-none");
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <span id="spinnerQR" class="spinner-border spinner-border-sm me-2 d-none"></span>
+                    Actualizar QR
+                `;
+            });
+        }
+    </script>
+
+}
+
 
 <div class="card shadow-sm p-4">
     <h4>Historial de Crédito</h4>
