@@ -490,6 +490,24 @@ namespace FrontCafeteriaMVC.Services
 
             return true;
         }
+        public async Task<bool> EnviarQRAsync(string correoDestino, string numeroControl)
+        {
+            // Configuración — puedes cambiarla si usas otro correo
+            var payload = new
+            {
+                CorreoRemitente = "cafeteriatec@gmail.com",
+                ClaveApp = "AQUI-TU-CLAVE-DE-APP",
+                CorreoDestino = correoDestino,
+                NumeroControl = numeroControl,
+                Huella = "",
+                SmtpServidor = "smtp.gmail.com",
+                SmtpPuerto = 587,
+                UsarSSL = true
+            };
+
+            var response = await _http.PostAsJsonAsync("api/UsuarioNC/EnviarQR", payload);
+            return response.IsSuccessStatusCode;
+        }
 
     }
 }

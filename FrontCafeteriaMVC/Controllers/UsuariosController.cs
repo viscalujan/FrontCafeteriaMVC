@@ -29,23 +29,47 @@ namespace FrontCafeteriaMVC.Controllers
             return View(new UsuarioRegistroDTO());
         }
 
+        // [HttpPost]
+        //public async Task<IActionResult> Crear(UsuarioRegistroDTO usuarioRegistroDTO)
+        // {
+        //   if (!ModelState.IsValid)
+        //      return View(usuarioRegistroDTO);
+
+        //    var resultado = await _servicesApi.RegistrarUsuarioAsync(usuarioRegistroDTO);
+
+        //   if (resultado)
+        //           return RedirectToAction(nameof(Index));
+
+        //    ModelState.AddModelError(string.Empty, "No se pudo registrar el usuario.");
+        //   return View(usuarioRegistroDTO);
+        //   }
         [HttpPost]
         public async Task<IActionResult> Crear(UsuarioRegistroDTO usuarioRegistroDTO)
-         {
-           if (!ModelState.IsValid)
-              return View(usuarioRegistroDTO);
-        
+        {
+            if (!ModelState.IsValid)
+                return View(usuarioRegistroDTO);
+
             var resultado = await _servicesApi.RegistrarUsuarioAsync(usuarioRegistroDTO);
 
-          if (resultado)
-                 return RedirectToAction(nameof(Index));
-       
-           ModelState.AddModelError(string.Empty, "No se pudo registrar el usuario.");
-          return View(usuarioRegistroDTO);
+            if (!resultado)
+            {
+                ModelState.AddModelError(string.Empty, "No se pudo registrar el usuario.");
+                return View(usuarioRegistroDTO);
+            }
 
+            // 🔹 GENERAR Y ENVIAR EL QR AUTOMÁTICAMENTE
+            var qrOk = await _servicesApi.EnviarQRAsync(usuarioRegistroDTO.Correo, usuarioRegistroDTO.NumeroControl);
 
-          }
-   
+            if (!qrOk)
+            {
+                TempData["Error"] = "El usuario fue creado, pero no se pudo generar ni enviar su QR.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Exito"] = "Usuario creado correctamente y QR enviado.";
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpGet]
         public IActionResult AumentarCredito()
         {
