@@ -223,7 +223,7 @@ namespace FrontCafeteriaMVC.Services
             if (string.IsNullOrWhiteSpace(numeroControl))
                 return await ObtenerHistorialCreditoGeneralAsync(); // Cambio importante aquí
 
-            string url = $"api/Usuarios/historial-credito/{numeroControl}";
+            string url = $"api/UsuarioNC/historial-credito/{numeroControl}";
             var response = await _http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)

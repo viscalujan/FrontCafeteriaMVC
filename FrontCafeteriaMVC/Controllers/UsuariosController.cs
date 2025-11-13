@@ -1,8 +1,11 @@
 ﻿using FrontCafeteriaMVC.Filters;
 using FrontCafeteriaMVC.Models;
 using FrontCafeteriaMVC.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FrontCafeteriaMVC.Controllers
 {
@@ -196,7 +199,26 @@ namespace FrontCafeteriaMVC.Controllers
         //  return View(vm);
         //}
         public async Task<IActionResult> MiCuenta()
+
         {
+
+            // 🔹 Manejo del flag para quitar el botón "Regresar" en primer acceso
+            var identity = (ClaimsIdentity)User.Identity;
+            var loginClaim = identity.FindFirst("FirstLogin");
+
+            if (loginClaim != null && loginClaim.Value == "true")
+            {
+                identity.RemoveClaim(loginClaim);
+                identity.AddClaim(new Claim("FirstLogin", "false"));
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(identity)
+                );
+            }
+
+
+
             // Ahora sí toma el número de control CORRECTO
             var numeroControl = HttpContext.Session.GetString("NumeroControl");
             var nombre = User.Identity?.Name;

@@ -4,12 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Cafetería</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FrontCafeteriaMVC.styles.css" asp-append-version="true" />
+
     @RenderSection("Styles", required: false)
 </head>
-<body>
+
+<body class="d-flex flex-column min-vh-100">
+
     <header>
         <nav class="navbar navbar-expand-sm navbar-light bg-light border-bottom mb-3 px-3">
             <div class="container-fluid d-flex justify-content-between align-items-center">
@@ -25,19 +29,42 @@
         </nav>
     </header>
 
-    <div class="container">
+    @{
+        var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+        var action = ViewContext.RouteData.Values["Action"]?.ToString();
+        var first = User.Claims.FirstOrDefault(c => c.Type == "FirstLogin")?.Value;
+
+        bool mostrarRegresar =
+        User.Identity.IsAuthenticated &&
+        controller != "Login" &&
+        !(controller == "Inventario" && action == "HomeInventario") &&
+        first != "true";
+    }
+
+    @if (mostrarRegresar)
+    {
+        <div class="container">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary mt-2 mb-2">
+                ← Regresar
+            </a>
+        </div>
+    }
+
+    <div class="container flex-grow-1">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer text-center mt-5 text-muted">
+    <footer class="footer text-center mt-auto py-3 bg-light text-muted">
         <small>&copy; 2025 - Sistema de Cafetería</small>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

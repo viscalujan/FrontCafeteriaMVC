@@ -2,9 +2,12 @@
 using FrontCafeteriaMVC.Helpers;
 using FrontCafeteriaMVC.Models;
 using FrontCafeteriaMVC.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Security.Policy;
 
 namespace FrontCafeteriaMVC.Controllers
@@ -23,6 +26,22 @@ namespace FrontCafeteriaMVC.Controllers
 
         public async Task<IActionResult> Index(string? buscar)
         {
+
+            var identity = (ClaimsIdentity)User.Identity;
+            var loginClaim = identity.FindFirst("FirstLogin");
+
+            if (loginClaim != null && loginClaim.Value == "true")
+            {
+                identity.RemoveClaim(loginClaim);
+                identity.AddClaim(new Claim("FirstLogin", "false"));
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(identity)
+                );
+            }
+
+
             var productos = await _api.GetProductosAsync();
 
             if (!string.IsNullOrWhiteSpace(buscar))

@@ -48,6 +48,9 @@ namespace FrontCafeteriaMVC.Controllers
                     claims.Add(new Claim("NumeroControl", numeroControl));
                 }
 
+                claims.Add(new Claim("FirstLogin", "true"));
+
+
                 var authProperties = new AuthenticationProperties
                 {
                     AllowRefresh = true,
