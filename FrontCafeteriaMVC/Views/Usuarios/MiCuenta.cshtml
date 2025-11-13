@@ -15,10 +15,11 @@
     <h4>Mi Código QR</h4>
     @if (!string.IsNullOrEmpty(Model.QrBase64))
     {
-        <img src="data:image/png;base64,@Model.QrBase64" class="img-thumbnail" style="max-width: 200px;" />
+        <img src="@Model.QrBase64" class="img-thumbnail" style="max-width: 200px;" />
         <br />
         <a class="btn btn-primary mt-2" href="@Model.QrDownloadUrl" download="codigo_qr.png">Descargar QR</a>
     }
+
     else
     {
         <p>No hay código QR disponible.</p>
