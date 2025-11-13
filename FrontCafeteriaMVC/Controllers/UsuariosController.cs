@@ -116,42 +116,48 @@ namespace FrontCafeteriaMVC.Controllers
             return View(dto);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerCredito(string numeroControl)
-        {
-            if (string.IsNullOrWhiteSpace(numeroControl))
-                return Json(new { success = false, mensaje = "Número de control vacío." });
-
-            var usuario = await _servicesApi.GetUsuarioPorNumeroControlAsync(numeroControl);
-
-            if (usuario == null)
-                return Json(new { success = false, mensaje = "Usuario no encontrado." });
-
-            return Json(new { success = true, credito = usuario.Credito });
-        }
 
         [HttpGet]
-        public async Task<IActionResult> HistorialCredito(string numeroControl)
+        public async Task<IActionResult> HistorialCredito(
+    string? numeroControl,
+    DateTime? desde,
+    DateTime? hasta)
         {
-            List<HistorialCredito> historial;
+            // Valores por defecto si no vienen
+            hasta ??= DateTime.Today;
+            desde ??= hasta.Value.AddDays(-30);
 
-            if (string.IsNullOrWhiteSpace(numeroControl))
-            {
-                historial = await _servicesApi.ObtenerHistorialCreditoGeneralAsync();
-            }
-            else
-            {
-                historial = await _servicesApi.ObtenerHistorialCreditoAsync(numeroControl);
-            }
+            // Guardamos en el VM como FechaInicio / FechaFin
+            List<HistorialCredito> historial =
+                await _servicesApi.ObtenerHistorialFiltradoAsync(desde, hasta, numeroControl);
 
-            var modelo = new HistorialCreditoFiltroViewModel
+            var vm = new HistorialCreditoFiltroViewModel
             {
                 NumeroControl = numeroControl,
+                FechaInicio = desde,
+                FechaFin = hasta,
                 Historial = historial
             };
 
-            return View(modelo);
+            return View(vm);
         }
+
+
+        public async Task<IActionResult> ExportarHistorial(
+            string? numeroControl,
+            DateTime? desde,
+            DateTime? hasta)
+        {
+            var bytes = await _servicesApi.ExportarHistorialExcelAsync(desde, hasta, numeroControl);
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"HistorialCredito_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+            );
+        }
+
+
 
 
         [HttpGet]

@@ -46,5 +46,11 @@ namespace FrontCafeteriaMVC.Services
         Task<bool> TransferirCreditoAsync(TransferenciaCreditoDTO dto, string numeroControlEmisor);
         Task<bool> EnviarQRAsync(string correoDestino, string numeroControl);
 
+        Task<List<HistorialCredito>> ObtenerHistorialFiltradoAsync(DateTime? desde, DateTime? hasta, string numeroControl);
+        Task<byte[]> ExportarHistorialExcelAsync(DateTime? desde, DateTime? hasta, string numeroControl);
+
+
+
+
     }
 }

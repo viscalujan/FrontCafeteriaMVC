@@ -531,5 +531,63 @@ namespace FrontCafeteriaMVC.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<List<HistorialCredito>> ObtenerHistorialFiltradoAsync(
+            DateTime? desde, DateTime? hasta, string numeroControl)
+        {
+            AgregarTokenHeader();
+
+            var desdeStr = desde?.ToString("yyyy-MM-dd");
+            var hastaStr = hasta?.ToString("yyyy-MM-dd");
+
+            var url = $"api/Usuarios/historial-credito-filtrado?desde={desdeStr}&hasta={hastaStr}";
+
+            if (!string.IsNullOrWhiteSpace(numeroControl))
+            {
+                url += $"&numeroControl={Uri.EscapeDataString(numeroControl)}";
+            }
+
+            var resp = await _http.GetAsync(url);
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                var error = await resp.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error historial filtrado: {resp.StatusCode} - {error}");
+                return new List<HistorialCredito>();
+            }
+
+            return await resp.Content.ReadFromJsonAsync<List<HistorialCredito>>();
+        }
+
+
+
+        public async Task<byte[]> ExportarHistorialExcelAsync(
+            DateTime? desde, DateTime? hasta, string numeroControl)
+        {
+            AgregarTokenHeader();
+
+            var desdeStr = desde?.ToString("yyyy-MM-dd");
+            var hastaStr = hasta?.ToString("yyyy-MM-dd");
+
+            var url = $"api/Usuarios/historial-credito-excel?desde={desdeStr}&hasta={hastaStr}";
+
+            if (!string.IsNullOrWhiteSpace(numeroControl))
+            {
+                url += $"&numeroControl={Uri.EscapeDataString(numeroControl)}";
+            }
+
+            var resp = await _http.GetAsync(url);
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                var error = await resp.Content.ReadAsStringAsync();
+                throw new Exception($"Error al exportar historial: {resp.StatusCode} - {error}");
+            }
+
+            return await resp.Content.ReadAsByteArrayAsync();
+        }
+
+
+
+
     }
 }
