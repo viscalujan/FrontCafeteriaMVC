@@ -118,31 +118,34 @@ namespace FrontCafeteriaMVC.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> HistorialCredito(
-    string? numeroControl,
-    DateTime? desde,
-    DateTime? hasta)
+        public async Task<IActionResult> HistorialCredito(DateTime? desde, DateTime? hasta, string? numeroControl)
         {
-            // Valores por defecto si no vienen
-            hasta ??= DateTime.Today;
-            desde ??= hasta.Value.AddDays(-30);
-
-            // Guardamos en el VM como FechaInicio / FechaFin
-            List<HistorialCredito> historial =
-                await _servicesApi.ObtenerHistorialFiltradoAsync(desde, hasta, numeroControl);
-
-            var vm = new HistorialCreditoFiltroViewModel
+            // 1. Si el usuario invierte fechas, corregimos automáticamente
+            if (desde.HasValue && hasta.HasValue && desde > hasta)
             {
+                var temp = desde;
+                desde = hasta;
+                hasta = temp;
+            }
+
+            // 2. Obtener datos del API
+            var historial = await _servicesApi.ObtenerHistorialFiltradoAsync(desde, hasta, numeroControl);
+
+            // 3. Preparar modelo para la vista
+            var model = new HistorialCreditoFiltroViewModel
+            {
+                Historial = historial,
                 NumeroControl = numeroControl,
                 FechaInicio = desde,
-                FechaFin = hasta,
-                Historial = historial
+                FechaFin = hasta
             };
 
-            return View(vm);
+            return View(model);
         }
 
 
+
+        [HttpGet]
         public async Task<IActionResult> ExportarHistorial(
             string? numeroControl,
             DateTime? desde,
