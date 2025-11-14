@@ -4,65 +4,132 @@
     ViewData["Title"] = "Gestión de Pedidos";
 }
 
-<h2 class="mb-4">Pedidos en curso</h2>
+<h2 class="mb-4 text-center">Gestión de Pedidos</h2>
 
-<div class="d-flex gap-2 mb-3">
-    <button class="btn btn-dark">Todos (@Model.Count)</button>
-    <button class="btn btn-outline-warning">Pendientes</button>
-    <button class="btn btn-outline-info">En preparación</button>
-    <button class="btn btn-outline-success">Listos</button>
-</div>
+<table class="table table-striped table-bordered shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Alumno</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
 
-<div class="row">
-    @foreach (var p in Model)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm p-3">
-                <h5><i class="bi bi-person"></i> @p.Alumno</h5>
-                <p class="text-muted">NC: @p.NumeroControl</p>
-                <span class="badge
-                        @(p.Estado == "Pendiente" ? "bg-warning" :
-                                            p.Estado == "En preparación" ? "bg-info" :
-                                            p.Estado == "Listo" ? "bg-success" :
-                                            p.Estado == "Entregado" ? "bg-secondary" :
-                                            "bg-danger")">@p.Estado</span>
-            <hr />
-            <ul class="list-group mb-2">
-                @foreach (var d in p.Detalles)
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            @d.Producto <span>x@d.Cantidad</span> <strong>$@d.Precio</strong>
-                        </li>
-                    }
-                </ul>
-                <p><strong>Total: </strong>$@p.TotalPedido</p>
-                <div class="d-flex gap-2">
-                    @if (p.Estado == "Pendiente")
-                    {
-                        <form asp-action="CambiarEstado" method="post">
-                            <input type="hidden" name="idPedido" value="@p.IdPedidos" />
-                            <input type="hidden" name="nuevoEstado" value="2" />
-                            <button class="btn btn-primary w-100">Aceptar / Preparar</button>
-                        </form>
-                    }
-                    else if (p.Estado == "En preparación")
-                    {
-                        <form asp-action="CambiarEstado" method="post">
-                            <input type="hidden" name="idPedido" value="@p.IdPedidos" />
-                            <input type="hidden" name="nuevoEstado" value="3" />
-                            <button class="btn btn-success w-100">Marcar como Listo</button>
-                        </form>
-                    }
-                    else if (p.Estado == "Listo")
-                    {
-                        <form asp-action="CambiarEstado" method="post">
-                            <input type="hidden" name="idPedido" value="@p.IdPedidos" />
-                            <input type="hidden" name="nuevoEstado" value="5" />
-                            <button class="btn btn-secondary w-100">Entregado</button>
-                        </form>
-                    }
+    <tbody>
+        @foreach (var p in Model)
+        {
+            string badge = p.Estado switch
+            {
+                "Pendiente" => "bg-warning text-dark",
+                "Preparando" => "bg-info text-dark",
+                "Listo" => "bg-primary",
+                "Rechazado" => "bg-danger",
+                "Entregado" => "bg-success",
+                _ => "bg-secondary"
+            };
+
+            <tr>
+                <!-- ID -->
+                <td>@p.IdPedidos</td>
+
+                <!-- ALUMNO -->
+                <td>
+                    <b>@p.Alumno</b><br />
+                    <small class="text-muted">@p.NumeroControl</small>
+                </td>
+
+                <!-- ESTADO -->
+                <td>
+                    <span class="badge @badge" style="font-size:14px;">
+                        @p.Estado
+                    </span>
+                </td>
+
+                <!-- FECHA -->
+                <td>@p.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+
+                <!-- TOTAL -->
+                <td class="fw-bold text-success">
+                    $@p.TotalPedido
+                </td>
+
+                <!-- ACCIONES -->
+                <td>
+                    <!-- VER DETALLES -->
+                    <button class="btn btn-sm btn-secondary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#detallesModal_@p.IdPedidos">
+                        Ver detalles
+                    </button>
+
+                    <!-- CAMBIAR ESTADO -->
+                    <form asp-action="CambiarEstado" method="post" class="d-inline">
+                        <input type="hidden" name="idPedido" value="@p.IdPedidos" />
+
+                        @if (p.Estado == "Pendiente")
+                        {
+                            <button name="nuevoEstado" value="2" class="btn btn-sm btn-info">Preparar</button>
+                            <button name="nuevoEstado" value="4" class="btn btn-sm btn-danger">Rechazar</button>
+                        }
+                        else if (p.Estado == "Preparando")
+                        {
+                            <button name="nuevoEstado" value="3" class="btn btn-sm btn-primary">Listo</button>
+                        }
+                        else if (p.Estado == "Listo")
+                        {
+                            <button name="nuevoEstado" value="5" class="btn btn-sm btn-success">Entregar</button>
+                        }
+                    </form>
+                </td>
+            </tr>
+
+            <!-- MODAL DETALLES -->
+            <div class="modal fade" id="detallesModal_@p.IdPedidos" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content shadow">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Detalles del Pedido #@p.IdPedidos</h5>
+                            <button class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <p><b>Alumno:</b> @p.Alumno (@p.NumeroControl)</p>
+                            <p><b>Total:</b> $@p.TotalPedido</p>
+
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var d in p.Detalles)
+                                    {
+                                        <tr>
+                                            <td>@d.Producto</td>
+                                            <td>@d.Cantidad</td>
+                                            <td>$@d.Precio</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </tbody>
+</table>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

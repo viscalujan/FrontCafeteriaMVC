@@ -20,11 +20,13 @@ namespace FrontCafeteriaMVC.Controllers
         }
 
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> CambiarEstado(int idPedido, int nuevoEstado)
         {
             await _api.CambiarEstadoPedidoAsync(idPedido, nuevoEstado);
             return RedirectToAction("Index");
         }
+
     }
 
 
