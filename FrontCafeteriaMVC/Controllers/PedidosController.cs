@@ -78,6 +78,18 @@ namespace FrontCafeteriaMVC.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> MisPedidos()
+        {
+            var numeroControl = HttpContext.Session.GetString("NumeroControl");
+
+            if (string.IsNullOrEmpty(numeroControl))
+                return Json(new { error = "No autorizado" });
+
+            var pedidos = await _api.GetPedidosPorNumeroControlAsync(numeroControl);
+
+            return Json(pedidos);
+        }
 
 
 

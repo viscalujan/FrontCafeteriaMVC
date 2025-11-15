@@ -689,6 +689,18 @@ namespace FrontCafeteriaMVC.Services
 
             return response.IsSuccessStatusCode;
         }
+        public async Task<List<PedidoViewModel>> GetPedidosPorNumeroControlAsync(string numeroControl)
+        {
+            // Obtener todos los pedidos del backend
+            var todos = await GetPedidosAsync();
+
+            // Filtrarlos por número de control
+            return todos
+                .Where(p => p.NumeroControl == numeroControl)
+                .ToList();
+        }
+
+
 
 
     }
