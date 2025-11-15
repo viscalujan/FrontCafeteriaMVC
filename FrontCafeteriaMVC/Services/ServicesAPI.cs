@@ -656,11 +656,28 @@ namespace FrontCafeteriaMVC.Services
             return JsonConvert.DeserializeObject<List<PedidoViewModel>>(json);
         }
 
+        // public async Task<bool> CambiarEstadoPedidoAsync(int idPedido, int nuevoEstado)
+        // {
+        //     AgregarTokenHeader();
+        //
+        //    var response = await _http.PutAsync($"api/Pedidos/{idPedido}/estado?nuevoEstado={nuevoEstado}", null);
+        //   return response.IsSuccessStatusCode;
+        // }
         public async Task<bool> CambiarEstadoPedidoAsync(int idPedido, int nuevoEstado)
         {
             AgregarTokenHeader();
 
-            var response = await _http.PutAsync($"api/Pedidos/{idPedido}/estado?nuevoEstado={nuevoEstado}", null);
+            var payload = new
+            {
+                NuevoEstado = nuevoEstado,
+                Motivo = "" // opcional para rechazar
+            };
+
+            var json = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _http.PutAsync($"api/Pedidos/{idPedido}/estado", content);
+
             return response.IsSuccessStatusCode;
         }
 
