@@ -664,6 +664,15 @@ namespace FrontCafeteriaMVC.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<bool> CancelarVentaAsync(int idVenta)
+        {
+            AgregarTokenHeader(); // si usas JWT
+
+            var response = await _http.PutAsync($"api/ventas/{idVenta}/cancelar", null);
+
+            return response.IsSuccessStatusCode;
+        }
+
 
     }
 }

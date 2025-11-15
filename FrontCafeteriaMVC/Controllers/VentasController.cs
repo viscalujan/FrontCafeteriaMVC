@@ -231,6 +231,19 @@ namespace FrontCafeteriaMVC.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CancelarVenta(int idVenta)
+        {
+            bool ok = await _api.CancelarVentaAsync(idVenta);
+
+            if (ok)
+                TempData["Success"] = "Venta cancelada correctamente.";
+            else
+                TempData["Error"] = "No se pudo cancelar la venta.";
+
+            return RedirectToAction("Index");
+        }
+
     }
 
 }
