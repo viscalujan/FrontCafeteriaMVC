@@ -57,6 +57,9 @@ namespace FrontCafeteriaMVC.Services
         Task<string> CrearPedidoAsync(PedidoCreateDTO pedido);
         Task<bool> CancelarVentaAsync(int idVenta);
         Task<List<PedidoViewModel>> GetPedidosPorNumeroControlAsync(string numeroControl);
+        Task<bool> SolicitarCodigoRecuperacionAsync(string correo);
+        Task<bool> ValidarCodigoRecuperacionAsync(string correo, string codigo);
+        Task<bool> GuardarNuevaContraAsync(string correo, string nuevaContra);
 
     }
 }

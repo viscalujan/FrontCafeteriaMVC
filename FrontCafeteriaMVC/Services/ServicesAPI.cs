@@ -700,6 +700,27 @@ namespace FrontCafeteriaMVC.Services
                 .ToList();
         }
 
+        public async Task<bool> SolicitarCodigoRecuperacionAsync(string correo)
+        {
+            var payload = new { Correo = correo };
+            var resp = await _http.PostAsJsonAsync("api/Usuarios/recuperar-contra/solicitar", payload);
+            return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> ValidarCodigoRecuperacionAsync(string correo, string codigo)
+        {
+            var payload = new { Correo = correo, Codigo = codigo };
+            var resp = await _http.PostAsJsonAsync("api/Usuarios/recuperar-contra/validar-codigo", payload);
+            return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> GuardarNuevaContraAsync(string correo, string nuevaContra)
+        {
+            var payload = new { Correo = correo, NuevaContra = nuevaContra };
+            var resp = await _http.PostAsJsonAsync("api/Usuarios/recuperar-contra/nueva", payload);
+            return resp.IsSuccessStatusCode;
+        }
+
 
 
 

@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Nueva contraseña";
+}
+
+<h2>Nueva contraseña</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post">
+    <input type="hidden" name="correo" value="@ViewBag.Correo" />
+
+    <label>Nueva contraseña:</label>
+    <input type="password" name="nueva" class="form-control" required />
+
+    <button class="btn btn-primary mt-3">Guardar contraseña</button>
+</form>

@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Validar código";
+}
+
+<h2>Validar código</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post">
+    <input type="hidden" name="correo" value="@ViewBag.Correo" />
+
+    <label>Código enviado al correo:</label>
+    <input type="text" name="codigo" class="form-control" required maxlength="6" />
+
+    <button class="btn btn-success mt-3">Validar</button>
+</form>
