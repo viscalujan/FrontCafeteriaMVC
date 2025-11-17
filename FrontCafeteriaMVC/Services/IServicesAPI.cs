@@ -5,7 +5,7 @@ namespace FrontCafeteriaMVC.Services
 {
     public interface IServicesAPI
     {
-        Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login);
+        Task<LoginResponse> LoginAsync(LoginRequest login);
 
         Task<List<Producto>> GetProductosAsync();
         Task<Producto> GetProductoByIdAsync(int id);

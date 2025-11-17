@@ -41,26 +41,39 @@ namespace FrontCafeteriaMVC.Services
         //           return (result.token, result.rol, result.numeroControl);
         // }
 
-        public async Task<(string token, string rol, string? numeroControl)> LoginAsync(LoginRequest login)
+        public async Task<LoginResponse> LoginAsync(LoginRequest login)
         {
             var response = await _http.PostAsJsonAsync("api/Auth/login", login);
 
-            if (!response.IsSuccessStatusCode)
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("RESPUESTA LOGIN FRONT: " + json); // DEBUG
+
+            var result = JsonConvert.DeserializeObject<LoginResponse>(json);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
                 throw new Exception("Credenciales inválidas");
 
-            var result = await response.Content.ReadFromJsonAsync<FrontCafeteriaMVC.Models.LoginResponse>();
+            // 🔹 Si requiere cambio (primer inicio)
+            if (result.requiereCambio == true)
+            {
+                // No guardamos token todavía
+                return result;
+            }
 
-            // Guardar token
+            // 🔹 Login normal
+            if (string.IsNullOrEmpty(result.token))
+                throw new Exception("Credenciales inválidas");
+
             _httpContextAccessor.HttpContext!.Session.SetString("token", result.token);
-            _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.token);
+            _http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", result.token);
 
-            // 🔥🔥🔥 AGREGA ESTO 🔥🔥🔥
             if (!string.IsNullOrEmpty(result.numeroControl))
                 _httpContextAccessor.HttpContext.Session.SetString("NumeroControl", result.numeroControl);
-            // 🔥🔥🔥 FIN
 
-            return (result.token, result.rol, result.numeroControl);
+            return result;
         }
+
 
         public async Task<List<Producto>> GetProductosAsync()
         {
@@ -189,12 +202,6 @@ namespace FrontCafeteriaMVC.Services
             _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        private class LoginResponse
-        {
-
-            public string token { get; set; }
-            public string rol { get; set; }
-        }
 
         public async Task<Ticket?> GenerarVentaAsync(VentaCreate venta, string token)
         {

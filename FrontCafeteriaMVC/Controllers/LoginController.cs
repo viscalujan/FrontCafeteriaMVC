@@ -27,28 +27,45 @@ namespace FrontCafeteriaMVC.Controllers
         {
             try
             {
-                var (token, rol, numeroControl) = await _services.LoginAsync(login);
+                // 🔥 Llamamos al servicio (ya devuelve LoginResponse)
+                var resp = await _services.LoginAsync(login);
 
-                // 🔹 Guardar el NumeroControl en sesión (ESTE ERA EL PROBLEMA)
-                if (!string.IsNullOrEmpty(numeroControl))
+                // ======================================================
+                // 🔹 1) PRIMER INICIO DE SESIÓN
+                // ======================================================
+                if (resp.requiereCambio == true && resp.modo == "primerInicio")
                 {
-                    HttpContext.Session.SetString("NumeroControl", numeroControl);
+                    TempData["Correo"] = login.Correo;
+                    TempData["ToastType"] = "warning";
+                    TempData["ToastMessage"] = resp.mensaje;
+
+                    return RedirectToAction("Index", "PrimerInicio");
                 }
 
-                // Crear claims
+                // ======================================================
+                // 🔹 2) LOGIN NORMAL
+                // ======================================================
+                if (string.IsNullOrEmpty(resp.token))
+                {
+                    ViewBag.Error = "Credenciales inválidas.";
+                    return View(login);
+                }
+
+                // Guardar token y claims
+                HttpContext.Session.SetString("token", resp.token);
+
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, login.Correo),
-            new Claim(ClaimTypes.Role, rol),
-            new Claim("JwtToken", token)
-        };
-
-                if (rol == "alumno" && !string.IsNullOrEmpty(numeroControl))
                 {
-                    claims.Add(new Claim("NumeroControl", numeroControl));
-                }
+                    new Claim(ClaimTypes.Name, login.Correo),
+                    new Claim(ClaimTypes.Role, resp.rol),
+                    new Claim("JwtToken", resp.token)
+                };
 
-                claims.Add(new Claim("FirstLogin", "true"));
+                if (!string.IsNullOrEmpty(resp.numeroControl))
+                {
+                    claims.Add(new Claim("NumeroControl", resp.numeroControl));
+                    HttpContext.Session.SetString("NumeroControl", resp.numeroControl);
+                }
 
                 var authProperties = new AuthenticationProperties
                 {
@@ -63,10 +80,13 @@ namespace FrontCafeteriaMVC.Controllers
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     claimsPrincipal,
-                    authProperties);
+                    authProperties
+                );
 
-                // Redirigir según rol
-                return rol switch
+                // ======================================================
+                // 🔹 REDIRECCIÓN SEGÚN ROL
+                // ======================================================
+                return resp.rol switch
                 {
                     "ventas" => RedirectToAction("Index", "Ventas"),
                     "inventario" => RedirectToAction("HomeInventario", "Login"),
@@ -76,7 +96,7 @@ namespace FrontCafeteriaMVC.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error en login: {ex.Message}");
+                Console.WriteLine($"Error en Login: {ex.Message}");
                 ViewBag.Error = "Credenciales inválidas.";
                 return View(login);
             }
