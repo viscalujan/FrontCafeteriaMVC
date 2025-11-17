@@ -5,18 +5,9 @@
     ViewData["Title"] = "Inicio de Sesión";
 }
 
-@if (env.IsDevelopment())
-{
-    <p class="text-muted text-center">Entorno actual: @env.EnvironmentName</p>
-}
-
 <div class="card w-50 mx-auto mt-5 shadow">
     <div class="card-body">
         <h2 class="card-title text-center mb-4">Inicio de Sesión</h2>
-
-        <div class="text-center mt-3">
-            <a href="/Recuperar" class="btn btn-link">¿Olvidaste tu contraseña?</a>
-        </div>
 
         <form asp-action="Index" method="post" novalidate>
             <div class="mb-3">
@@ -34,9 +25,15 @@
             @if (ViewBag.Error != null)
             {
                 <div class="alert alert-danger">@ViewBag.Error</div>
+
+                <div class="text-center mt-3">
+                    <a href="/Recuperar" class="btn btn-link">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
             }
 
-            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            <button type="submit" class="btn btn-primary w-100 mt-3">Ingresar</button>
         </form>
     </div>
 </div>

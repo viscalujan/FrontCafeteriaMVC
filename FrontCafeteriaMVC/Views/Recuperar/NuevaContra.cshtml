@@ -1,19 +1,174 @@
 ﻿@{
-    ViewData["Title"] = "Nueva contraseña";
+    ViewData["Title"] = "Restablecer Contraseña";
 }
 
-<h2>Nueva contraseña</h2>
+<div class="d-flex justify-content-center mt-5">
+    <div class="card p-4 shadow" style="width: 450px; border-radius: 20px;">
+        <h4 class="fw-bold">Restablecer Contraseña</h4>
+        <p class="text-muted">Ingresa tu nueva contraseña</p>
 
-@if (ViewBag.Error != null)
+        <form method="post" id="form-nueva">
+            <input type="hidden" name="correo" value="@ViewBag.Correo" />
+
+            <label class="fw-semibold">Nueva Contraseña</label>
+            <input type="password" id="pass" class="form-control mb-2" name="nueva" required />
+
+            <div id="seguridad" class="mt-2 small">
+                <span class="fw-bold">Seguridad:</span>
+                <span id="nivel" class="text-danger">Débil</span>
+
+                <ul class="mt-2">
+                    <li id="l1">Al menos 8 caracteres</li>
+                    <li id="l2">Una letra mayúscula</li>
+                    <li id="l3">Una letra minúscula</li>
+                    <li id="l4">Un número</li>
+                </ul>
+            </div>
+
+            <label class="fw-semibold mt-3">Confirmar Contraseña</label>
+            <input type="password" class="form-control mb-4" name="confirmacion" required />
+
+            <button id="btn-restablecer" class="btn btn-dark w-100" type="submit">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                <span class="btn-text">Restablecer contraseña</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+@* TOAST *@
+@if (TempData["ToastMessage"] != null)
 {
-    <div class="alert alert-danger">@ViewBag.Error</div>
+    <div id="toast-notify"
+         data-type="@TempData["ToastType"]"
+         data-message="@TempData["ToastMessage"]">
+    </div>
 }
 
-<form method="post">
-    <input type="hidden" name="correo" value="@ViewBag.Correo" />
+<style>
+    .toast-container-custom {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 9999;
+        min-width: 260px;
+        max-width: 340px;
+    }
 
-    <label>Nueva contraseña:</label>
-    <input type="password" name="nueva" class="form-control" required />
+    .toast-card {
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+        padding: 14px 18px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 14px;
+    }
 
-    <button class="btn btn-primary mt-3">Guardar contraseña</button>
-</form>
+    .toast-icon {
+        font-size: 18px;
+        margin-top: 2px;
+    }
+
+    .toast-title {
+        font-weight: 600;
+    }
+
+    .toast-text {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .toast-success .toast-icon {
+        color: #16a34a;
+    }
+
+    .toast-error .toast-icon {
+        color: #dc2626;
+    }
+
+    .toast-warning .toast-icon {
+        color: #d97706;
+    }
+</style>
+
+<script>
+    // Medidor de fuerza de contraseña
+    const pass = document.getElementById("pass");
+    const nivel = document.getElementById("nivel");
+    const l1 = document.getElementById("l1");
+    const l2 = document.getElementById("l2");
+    const l3 = document.getElementById("l3");
+    const l4 = document.getElementById("l4");
+
+    pass.addEventListener("input", () => {
+        const p = pass.value;
+        let score = 0;
+
+        if (p.length >= 8) { l1.style.color = "green"; score++; } else l1.style.color = "red";
+        if (/[A-Z]/.test(p)) { l2.style.color = "green"; score++; } else l2.style.color = "red";
+        if (/[a-z]/.test(p)) { l3.style.color = "green"; score++; } else l3.style.color = "red";
+        if (/[0-9]/.test(p)) { l4.style.color = "green"; score++; } else l4.style.color = "red";
+
+        if (score <= 1) nivel.innerText = "Débil";
+        else if (score == 2) nivel.innerText = "Media";
+        else nivel.innerText = "Fuerte";
+    });
+
+    // Loading botón
+    document.getElementById("form-nueva")?.addEventListener("submit", function () {
+        const btn = document.getElementById("btn-restablecer");
+        const spinner = btn.querySelector(".spinner-border");
+        const text = btn.querySelector(".btn-text");
+
+        btn.disabled = true;
+        spinner.classList.remove("d-none");
+        text.textContent = "Guardando...";
+    });
+
+    // Toast
+    document.addEventListener("DOMContentLoaded", () => {
+        const data = document.getElementById("toast-notify");
+        if (!data) return;
+
+        const type = data.dataset.type || "success";
+        const msg = data.dataset.message || "";
+
+        const container = document.createElement("div");
+        container.className = "toast-container-custom";
+
+        const card = document.createElement("div");
+        card.className = "toast-card";
+
+        if (type === "success") card.classList.add("toast-success");
+        else if (type === "error") card.classList.add("toast-error");
+        else if (type === "warning") card.classList.add("toast-warning");
+
+        const icon = document.createElement("div");
+        icon.className = "toast-icon";
+        icon.textContent = type === "success" ? "✔" : type === "error" ? "✖" : "⚠";
+
+        const body = document.createElement("div");
+        const title = document.createElement("div");
+        title.className = "toast-title";
+        title.textContent = type === "success" ? "Éxito" : type === "error" ? "Error" : "Aviso";
+
+        const text = document.createElement("div");
+        text.className = "toast-text";
+        text.textContent = msg;
+
+        body.appendChild(title);
+        body.appendChild(text);
+        card.appendChild(icon);
+        card.appendChild(body);
+        container.appendChild(card);
+        document.body.appendChild(container);
+
+        setTimeout(() => {
+            container.style.opacity = "0";
+            container.style.transition = "opacity 0.4s ease";
+            setTimeout(() => container.remove(), 400);
+        }, 3500);
+    });
+</script>
