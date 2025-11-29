@@ -20,9 +20,9 @@ namespace FrontCafeteriaMVC.Models
         [Range(50, double.MaxValue, ErrorMessage = "El crédito inicial debe ser al menos 50.")]
         public decimal Credito { get; set; }
 
-        [Required]
-        [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
-        public string Contrasena { get; set; }
+        //[Required]
+       // [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
+       // public string Contrasena { get; set; }
 
     }
 }

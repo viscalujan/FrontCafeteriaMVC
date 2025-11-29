@@ -154,15 +154,19 @@ namespace FrontCafeteriaMVC.Services
         public async Task<bool> RegistrarUsuarioAsync(UsuarioRegistroDTO usuario)
         {
             AgregarTokenHeader();
+            var contraseniaInicial = usuario.NumeroControl;
 
             // Convertir DTO del front al DTO que espera el backend
             var dtoBack = new
             {
+
                 Nombre = usuario.Nombre,
                 Correo = usuario.Correo,
                 NumeroControl = usuario.NumeroControl,
                 Credito = usuario.Credito,
-                Contra = usuario.Contrasena,     // 👈 Aquí está la magia
+                Contra = contraseniaInicial,           // 👈 AHORA SÍ SE ENVÍA
+
+                //Contra = usuario.Contrasena,     // 👈 Aquí está la magia
                 Rol = "alumno",                  // 👈 Agregado porque tu backend lo pide
                 CodigoQRTexto = usuario.NumeroControl // 👈 si necesitas QR inicial
             };
