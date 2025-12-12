@@ -1,15 +1,18 @@
-﻿@model List<FrontCafeteriaMVC.Models.Producto>
+﻿﻿
+@model List<FrontCafeteriaMVC.Models.Producto>
+
+
+
 
 @{
     ViewData["Title"] = "Menú de productos";
 }
 
-<!-- 🔥 UsuarioId enviado desde el controlador -->
-<input type="hidden" id="usuarioId" value="@ViewBag.UsuarioId" />
+}<input type="hidden" id="usuarioId" value="@ViewBag.UsuarioId" />
 
 <h2 class="mb-4">Menú disponible</h2>
 
-<!-- BOTÓN MIS PEDIDOS -->
+<!-- BOTÓN MIS PEDIDOS (NO TOCADO) -->
 <button class="btn btn-primary mb-3" data-bs-toggle="offcanvas" data-bs-target="#offcanvasPedidos">
     📦 Mis pedidos
 </button>
@@ -73,6 +76,27 @@
 
             <ul id="cart-list" class="list-group mb-3"></ul>
 
+            <!-- ✅ NUEVO: Resumen Subtotal / Comisión / Total final (sin quitar tu total) -->
+            <div class="alert alert-info">
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <strong>$<span id="subtotalTxt">0.00</span></strong>
+                </div>
+
+                <div class="d-flex justify-content-between text-muted">
+                    <span>Comisión (10% · min $5 · max $50)</span>
+                    <strong>$<span id="comisionTxt">0.00</span></strong>
+                </div>
+
+                <hr class="my-2" />
+
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Total final</span>
+                    <strong>$<span id="totalFinalTxt">0.00</span></strong>
+                </div>
+            </div>
+
+            <!-- TU TOTAL ORIGINAL (NO SE QUITA) -->
             <h5>Total: $<span id="total">0</span></h5>
 
             <button class="btn btn-success w-100 mt-2" onclick="submitOrder()">
@@ -82,7 +106,7 @@
     </div>
 </div>
 
-<!-- 🟦 OFFCANVAS: MIS PEDIDOS -->
+<!-- 🟦 OFFCANVAS: MIS PEDIDOS (NO TOCADO) -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPedidos">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title">Mis pedidos</h5>
@@ -96,7 +120,7 @@
     </div>
 </div>
 
-<!-- 🔍 MODAL DETALLES DE PEDIDO -->
+<!-- 🔍 MODAL DETALLES DE PEDIDO (NO TOCADO) -->
 <div class="modal fade" id="modalDetallesPedido" tabindex="-1">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
@@ -119,6 +143,31 @@
 
     <script>
         let cart = [];
+
+        // ✅ Comisión: 10% con umbral mínimo 5 y máximo 50
+        const COMISION_PCT = 0.10;
+        const COMISION_MIN = 5.00;
+        const COMISION_MAX = 50.00;
+
+        function calcComision(subtotal) {
+            if (!subtotal || subtotal <= 0) return 0;
+
+            let com = subtotal * COMISION_PCT;
+
+            if (com < COMISION_MIN) com = COMISION_MIN;
+            if (com > COMISION_MAX) com = COMISION_MAX;
+
+            return Math.round(com * 100) / 100;
+        }
+
+        function updateResumen(subtotal) {
+            const com = (subtotal > 0) ? calcComision(subtotal) : 0;
+            const totalFinal = subtotal + com;
+
+            document.getElementById("subtotalTxt").innerText = subtotal.toFixed(2);
+            document.getElementById("comisionTxt").innerText = com.toFixed(2);
+            document.getElementById("totalFinalTxt").innerText = totalFinal.toFixed(2);
+        }
 
         /* ============================
            CAMBIAR CANTIDAD
@@ -176,6 +225,9 @@
             });
 
             document.getElementById("total").innerText = total.toFixed(2);
+
+            // ✅ NUEVO: actualizar resumen con comisión
+            updateResumen(total);
         }
 
         /* ============================
@@ -206,7 +258,14 @@
 
             const confirm = await Swal.fire({
                 title: "¿Confirmar pedido?",
-                html: `<strong>Total: $${document.getElementById("total").innerText}</strong>`,
+                html: `
+                    <div class="text-start">
+                        <div><strong>Subtotal:</strong> $${document.getElementById("subtotalTxt").innerText}</div>
+                        <div><strong>Comisión:</strong> $${document.getElementById("comisionTxt").innerText}</div>
+                        <hr class="my-2"/>
+                        <div><strong>Total final:</strong> $${document.getElementById("totalFinalTxt").innerText}</div>
+                    </div>
+                `,
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Sí, enviar",
@@ -248,7 +307,7 @@
 
 
         /* ============================
-           CARGAR MIS PEDIDOS (FILTRADO POR NC)
+           CARGAR MIS PEDIDOS (NO TOCADO)
         ============================ */
         async function cargarPedidosUsuario() {
 
@@ -305,32 +364,33 @@
             contenedor.innerHTML = html;
         }
 
-        /* Evento cuando se abre el offcanvas */
+        /* Evento cuando se abre el offcanvas (NO TOCADO) */
         document.getElementById("offcanvasPedidos")
             .addEventListener("shown.bs.offcanvas", cargarPedidosUsuario);
 
 
         /* ============================
-           MODAL DETALLES (FILTRADO)
+           MODAL DETALLES (NO TOCADO)
         ============================ */
         async function verDetallesPedido(idPedido) {
 
             const res = await fetch("/Pedidos/MisPedidos");
             const pedidos = await res.json();
 
-        const pedido = pedidos.find(p =>
-            p.idPedidos == idPedido ||
-            p.idPedido == idPedido ||
-            p.id == idPedido ||
-            p.Id == idPedido
-        );
+            const pedido = pedidos.find(p =>
+                p.idPedidos == idPedido ||
+                p.idPedido == idPedido ||
+                p.id == idPedido ||
+                p.Id == idPedido
+            );
+
             const body = document.getElementById("modalDetallesBody");
 
-                  if (!pedido) {
-            console.warn("Los datos de pedidos:", pedidos);
-            body.innerHTML = "<p class='text-danger'>No se encontró el pedido (ID no coincide con el JSON).</p>";
-            return;
-        }
+            if (!pedido) {
+                console.warn("Los datos de pedidos:", pedidos);
+                body.innerHTML = "<p class='text-danger'>No se encontró el pedido (ID no coincide con el JSON).</p>";
+                return;
+            }
 
             let html = `
                 <p><strong>Estado:</strong> ${pedido.estado}</p>
@@ -358,6 +418,11 @@
 
             new bootstrap.Modal(document.getElementById('modalDetallesPedido')).show();
         }
+
+        // ✅ Inicializa resumen en 0 al cargar
+        document.addEventListener("DOMContentLoaded", () => {
+            updateResumen(0);
+        });
 
     </script>
 }

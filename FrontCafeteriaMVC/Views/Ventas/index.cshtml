@@ -2,11 +2,13 @@
 @{
     ViewData["Title"] = "Ventas";
 }
+
 <li class="nav-item">
     <a class="nav-link" href="/GestionPedidos">Gestión de Pedidos</a>
 </li>
 
 <div class="container-fluid">
+
     <!-- Mensajes de estado -->
     @if (TempData["Error"] != null)
     {
@@ -27,10 +29,19 @@
         </div>
     }
 
-    <div class="row mb-3">
-        <div class="col">
-            <h1>Ventas</h1>
-            <a asp-action="Reporte" class="btn btn-info">Ver Reporte</a>
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="mb-0">Ventas</h1>
+            <small class="text-muted">Punto de venta · Agrega productos y finaliza la venta</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Reporte" class="btn btn-info">
+                <i class="fas fa-chart-bar"></i> Ver Reporte
+            </a>
+            <a class="btn btn-outline-dark" href="/GestionPedidos">
+                <i class="fas fa-box"></i> Gestión de pedidos
+            </a>
         </div>
     </div>
 
@@ -46,55 +57,64 @@
     <div class="row">
         <!-- Productos -->
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Productos Disponibles</h4>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0"><i class="fas fa-mug-hot"></i> Productos Disponibles</h4>
+                    <span class="badge badge-light">@(Model.Productos?.Count ?? 0) items</span>
                 </div>
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Precio</th>
-                                <th>Stock</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var producto in Model.Productos ?? new List<Producto>())
-                            {
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
                                 <tr>
-                                    <td>@producto.Nombre</td>
-                                    <td>@producto.Precio.ToString("C")</td>
-                                    <td>@producto.Cantidad</td>
-                                    <td>
-                                        <form asp-action="AgregarAlCarrito" method="post" class="form-inline">
-                                            <input type="hidden" name="ProductoId" value="@producto.Id" />
-                                            <div class="input-group">
-                                                <input type="number" name="Cantidad" value="1" min="1"
-                                                       max="@producto.Cantidad" class="form-control" style="width: 80px;" />
-                                                <div class="input-group-append">
-                                                    <button type="submit" class="btn btn-success">
-                                                        <i class="fas fa-cart-plus"></i> Agregar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </td>
+                                    <th>Nombre</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th style="width:260px;">Acciones</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.Productos ?? new List<Producto>())
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@producto.Nombre</td>
+                                        <td>@producto.Precio.ToString("C")</td>
+                                        <td>
+                                            <span class="badge badge-dark">@(producto.Cantidad)</span>
+                                        </td>
+                                        <td>
+                                            <form asp-action="AgregarAlCarrito" method="post" class="form-inline">
+                                                <input type="hidden" name="ProductoId" value="@producto.Id" />
+                                                <div class="input-group">
+                                                    <input type="number" name="Cantidad" value="1" min="1"
+                                                           max="@producto.Cantidad"
+                                                           class="form-control" style="width: 90px;" />
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="fas fa-cart-plus"></i> Agregar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
             </div>
         </div>
 
         <!-- Carrito -->
         <div class="col-md-4">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h4 class="mb-0"><i class="fas fa-shopping-cart"></i> Carrito</h4>
                 </div>
+
                 <div class="card-body">
                     @if (Model.Carrito != null && Model.Carrito.Any())
                     {
@@ -113,9 +133,10 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <form asp-action="QuitarDelCarrito" method="post">
+
+                                        <form asp-action="QuitarDelCarrito" method="post" class="ml-2">
                                             <input type="hidden" name="ProductoId" value="@item.ProductoId" />
-                                            <button type="submit" class="btn btn-danger btn-sm">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Quitar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -124,12 +145,44 @@
                             }
                         </ul>
 
-                        <div class="alert alert-info">
-                            <h5 class="mb-0">Total: <strong>@Model.Total.ToString("C")</strong></h5>
+                        <!-- ✅ Diseño “bonito” + totales (sin quitar tu total original) -->
+                        <div class="border rounded p-3 bg-light mb-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0"><i class="fas fa-receipt"></i> Resumen</h5>
+                                <span class="badge badge-info">Calculado</span>
+                            </div>
+
+                            <hr class="my-2" />
+
+                            <!-- Tu total original (no se elimina) -->
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Total (base)</span>
+                                <strong>@Model.Total.ToString("C")</strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <span>Subtotal</span>
+                                <strong>$<span id="subtotalTxt">@Model.Total.ToString("0.00")</span></strong>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted">
+                                <span>Comisión (solo crédito)</span>
+                                <strong>$<span id="comisionTxt">0.00</span></strong>
+                            </div>
+
+                            <hr class="my-2" />
+
+                            <div class="d-flex justify-content-between">
+                                <span class="font-weight-bold">Total final</span>
+                                <strong class="text-success">$<span id="totalFinalTxt">@Model.Total.ToString("0.00")</span></strong>
+                            </div>
+
+                            <!-- Valor raw para JS -->
+                            <span id="subtotalRaw" class="d-none" data-subtotal="@Model.Total.ToString("0.00")"></span>
                         </div>
 
-                        <!-- Formulario de venta -->
+                        <!-- Formulario de venta (MISMA funcionalidad) -->
                         <form asp-action="FinalizarVenta" method="post" id="ventaForm">
+
                             <div class="form-group">
                                 <label for="metodoPago"><i class="fas fa-money-bill-wave"></i> Método de pago:</label>
                                 <select id="metodoPago" name="metodoPago" class="form-control" required>
@@ -161,18 +214,19 @@
                     }
                     else
                     {
-                        <div class="alert alert-warning text-center">
-                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
-                            <p class="mb-0">El carrito está vacío</p>
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x mb-2 text-muted"></i>
+                            <p class="mb-0 text-muted">El carrito está vacío</p>
                         </div>
                     }
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal QR Scanner -->
+<!-- Modal QR Scanner (MISMA funcionalidad) -->
 <div class="modal fade" id="qrScannerModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -185,7 +239,9 @@
             <div class="modal-body text-center">
                 <div id="scannerContainer" style="width: 100%; height: 300px; overflow: hidden; position: relative;">
                     <video id="qrVideo" width="100%" height="100%" style="object-fit: cover;"></video>
-                    <div id="qrScannerOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 2px solid rgba(0, 255, 0, 0.5);"></div>
+                    <div id="qrScannerOverlay"
+                         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                                pointer-events: none; border: 2px solid rgba(0, 255, 0, 0.5);"></div>
                 </div>
                 <div id="qrResult" class="mt-3 font-weight-bold text-success"></div>
             </div>
@@ -201,24 +257,62 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Mostrar/ocultar campos de crédito
-            $('#metodoPago').change(function() {
+        $(document).ready(function () {
+            // Mostrar/ocultar campos de crédito (MISMA funcionalidad)
+            $('#metodoPago').change(function () {
                 const showCreditFields = $(this).val() === 'credito';
                 $('#creditoFields').toggle(showCreditFields);
                 if (!showCreditFields) {
                     $('#qrStatus').hide();
                 }
+
+                // ✅ nuevo: recalcular totales visuales
+                refreshTotalesPOS();
             });
 
-            // Escaner QR
+            // Escaner QR (MISMA funcionalidad)
             $('#btnEscanearQR').click(showQRScanner);
+
+            // ✅ nuevo: calcular al cargar
+            refreshTotalesPOS();
 
             // Auto-ocultar mensajes después de 5 segundos
             setTimeout(() => {
                 $('.alert').alert('close');
             }, 5000);
         });
+
+        // ====== CONFIG COMISIÓN (SOLO VISUAL) ======
+        const COMISION_PCT_CREDITO = 0.036; // ajusta a tu porcentaje real
+
+        function calcComision(subtotal) {
+            if (!subtotal || subtotal <= 0) return 0;
+            let com = subtotal * COMISION_PCT_CREDITO;
+            return Math.round(com * 100) / 100;
+        }
+
+        function getSubtotalRaw() {
+            const raw = ($('#subtotalRaw').data('subtotal') ?? '0').toString().replace(',', '.');
+            return parseFloat(raw) || 0;
+        }
+
+        function refreshTotalesPOS() {
+            if (!document.getElementById('subtotalTxt')) return;
+
+            const metodo = ($('#metodoPago').val() || '').toLowerCase();
+            const subtotal = getSubtotalRaw();
+
+            let com = 0;
+            if (metodo === 'credito') {
+                com = calcComision(subtotal);
+            }
+
+            const totalFinal = subtotal + com;
+
+            $('#subtotalTxt').text(subtotal.toFixed(2));
+            $('#comisionTxt').text(com.toFixed(2));
+            $('#totalFinalTxt').text(totalFinal.toFixed(2));
+        }
 
         function showQRScanner() {
             const modal = $('#qrScannerModal');
@@ -232,18 +326,17 @@
             modal.modal('show');
             result.text("Buscando código QR...").css('color', 'black');
 
-            // Configurar cámara
             navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: "environment",
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
                 }
-            }).then(function(stream) {
+            }).then(function (stream) {
                 video.srcObject = stream;
                 video.play();
                 scanQR();
-            }).catch(function(err) {
+            }).catch(function (err) {
                 result.text("Error al acceder a la cámara: " + err.message).css('color', 'red');
             });
 
@@ -275,7 +368,7 @@
                 requestAnimationFrame(scanQR);
             }
 
-            modal.on('hidden.bs.modal', function() {
+            modal.on('hidden.bs.modal', function () {
                 scannerActive = false;
                 if (video.srcObject) {
                     video.srcObject.getTracks().forEach(track => track.stop());
@@ -283,8 +376,8 @@
             });
         }
 
-        // Validación del formulario
-        $('#ventaForm').submit(function(e) {
+        // Validación del formulario (MISMA funcionalidad)
+        $('#ventaForm').submit(function (e) {
             const metodoPago = $('#metodoPago').val();
             const btnFinalizar = $('#btnFinalizar');
 
@@ -294,7 +387,6 @@
                 return;
             }
 
-            // Deshabilitar botón para evitar doble clic
             btnFinalizar.prop('disabled', true);
             btnFinalizar.html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
         });

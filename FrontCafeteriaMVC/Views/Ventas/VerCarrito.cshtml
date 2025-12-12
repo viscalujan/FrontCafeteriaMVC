@@ -1,7 +1,7 @@
 ﻿@model List<Producto>
 @{
     ViewBag.Title = "Carrito de Compras";
-    var total = ViewBag.Total;
+    var total = (decimal)(ViewBag.Total ?? 0m);
 }
 
 <h2>Carrito de Compras</h2>
@@ -13,7 +13,12 @@
 else
 {
     <table class="table">
-        <thead><tr><th>Producto</th><th>Precio</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
         <tbody>
             @foreach (var p in Model)
             {
@@ -25,9 +30,51 @@ else
         </tbody>
     </table>
 
+    <!-- ✅ CAMBIO: subtotal / comisión / total final (sin quitar tu Total original) -->
     <h4>Total: @total.ToString("C")</h4>
+
+    <div class="alert alert-info">
+        <div class="d-flex justify-content-between">
+            <span>Subtotal</span>
+            <strong>$<span id="subtotalTxt">@total.ToString("0.00")</span></strong>
+        </div>
+        <div class="d-flex justify-content-between text-muted">
+            <span>Comisión</span>
+            <strong>$<span id="comisionTxt">0.00</span></strong>
+        </div>
+        <hr class="my-2" />
+        <div class="d-flex justify-content-between">
+            <span>Total final</span>
+            <strong>$<span id="totalFinalTxt">@total.ToString("0.00")</span></strong>
+        </div>
+
+        <span id="subtotalRaw" class="d-none" data-subtotal="@total.ToString("0.00")"></span>
+    </div>
 
     <form method="post" asp-action="FinalizarVenta">
         <button type="submit" class="btn btn-success">Finalizar Venta</button>
     </form>
+}
+
+@section Scripts {
+    <script>
+        // ====== CONFIG COMISIÓN (SOLO VISUAL) ======
+        const COMISION_PCT = 0.036; // ajusta a tu porcentaje real
+
+        function getSubtotalRaw() {
+            const raw = (document.getElementById('subtotalRaw')?.dataset?.subtotal || '0').toString().replace(',', '.');
+            return parseFloat(raw) || 0;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // En VerCarrito la mostramos SIEMPRE (si quieres que sea solo crédito, lo cambiamos)
+            const subtotal = getSubtotalRaw();
+            const com = Math.round((subtotal * COMISION_PCT) * 100) / 100;
+            const totalFinal = subtotal + com;
+
+            document.getElementById('subtotalTxt').innerText = subtotal.toFixed(2);
+            document.getElementById('comisionTxt').innerText = com.toFixed(2);
+            document.getElementById('totalFinalTxt').innerText = totalFinal.toFixed(2);
+        });
+    </script>
 }
