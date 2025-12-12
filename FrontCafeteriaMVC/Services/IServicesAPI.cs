@@ -60,6 +60,7 @@ namespace FrontCafeteriaMVC.Services
         Task<bool> SolicitarCodigoRecuperacionAsync(string correo);
         Task<bool> ValidarCodigoRecuperacionAsync(string correo, string codigo);
         Task<bool> GuardarNuevaContraAsync(string correo, string nuevaContra);
+        Task<bool> RegistrarAdminAsync(AdminRegistroDTO admin);
 
     }
 }

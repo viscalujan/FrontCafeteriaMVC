@@ -1,0 +1,63 @@
+﻿@model FrontCafeteriaMVC.Models.AdminRegistroDTO
+
+@{
+    ViewData["Title"] = "Crear administrador";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Crear usuario administrador</h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Exito"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Exito"]</div>
+                    }
+
+                    <form asp-action="Crear" method="post">
+                        <div class="mb-3">
+                            <label asp-for="NombreAut" class="form-label"></label>
+                            <input asp-for="NombreAut" class="form-control" />
+                            <span asp-validation-for="NombreAut" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CorreoAut" class="form-label"></label>
+                            <input asp-for="CorreoAut" class="form-control" />
+                            <span asp-validation-for="CorreoAut" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ContraAut" class="form-label"></label>
+                            <input asp-for="ContraAut" class="form-control" type="password" />
+                            <span asp-validation-for="ContraAut" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="RolAut" class="form-label"></label>
+                            <select asp-for="RolAut" class="form-select">
+                                <option value="">-- Selecciona un rol --</option>
+                                <option value="admin">Administrador General</option>
+                                <option value="financiero">Administrador de Recursos Financieros</option>
+                                <option value="productos">Administrador de Productos</option>
+                                <option value="ventas">Administrador de Ventas</option>
+                            </select>
+                            <span asp-validation-for="RolAut" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Crear usuario
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

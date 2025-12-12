@@ -731,7 +731,27 @@ namespace FrontCafeteriaMVC.Services
             var resp = await _http.PostAsJsonAsync("api/Usuarios/recuperar-contra/nueva", payload);
             return resp.IsSuccessStatusCode;
         }
+        public async Task<bool> RegistrarAdminAsync(AdminRegistroDTO admin)
+        {
+            try
+            {
+                // Agregamos token como en los demás métodos protegidos
+                AgregarTokenHeader();
 
+                // 🔑 Usa la misma clave que tiene tu backend en appsettings: settings:adminRegisterPassword
+                const string CLAVE_ADMIN = "admin123";
+
+                // Como tu HttpClient tipado ya tiene BaseAddress, sólo usamos la ruta relativa
+                var response = await _http.PostAsJsonAsync($"api/Auth/register?clave={CLAVE_ADMIN}", admin);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error registrando administrador: {ex.Message}");
+                return false;
+            }
+        }
 
 
 

@@ -88,6 +88,7 @@ namespace FrontCafeteriaMVC.Controllers
                 // ======================================================
                 return resp.rol switch
                 {
+                    "admin" => RedirectToAction("Crear", "Administradores"),   // Admin general → gestiona usuarios / créditos
                     "ventas" => RedirectToAction("Index", "Ventas"),
                     "inventario" => RedirectToAction("HomeInventario", "Login"),
                     "alumno" => RedirectToAction("MiCuenta", "Usuarios"),
